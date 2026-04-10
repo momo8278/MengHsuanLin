@@ -559,17 +559,20 @@
         async function spGetToken() {
             if (!msalInstance || !spAccount) return null;
             try {
+                // 優先嘗試靜默刷新（不彈視窗）
                 const result = await msalInstance.acquireTokenSilent({
                     scopes: ['Sites.Read.All', 'Files.Read.All'],
                     account: spAccount
                 });
                 return result.accessToken;
             } catch(e) {
-                // silent 失敗時彈出互動視窗
-                const result = await msalInstance.acquireTokenPopup({
-                    scopes: ['Sites.Read.All', 'Files.Read.All']
-                });
-                return result.accessToken;
+                // 靜默失敗（token 完全過期）→ 提示使用者重新點登入
+                // 不自動彈 popup（瀏覽器會封鎖非使用者觸發的 popup）
+                console.warn('Token 靜默刷新失敗，請重新登入', e);
+                spAccount = null;
+                spSetStatus('yellow', 'Token 已過期，請重新登入');
+                spShowButtons(false);
+                return null;
             }
         }
 
@@ -682,8 +685,15 @@
 
             } catch(e) {
                 console.error('SharePoint 讀取錯誤', e);
-                spSetStatus('red', '讀取失敗（見 Console）');
-                alert('SharePoint 讀取失敗：\n' + e.message + '\n\n請確認 siteId / folderPath 設定是否正確，或改用手動上傳。');
+                const msg = e.message || String(e);
+                if (msg.includes('popup') || msg.includes('block')) {
+                    spSetStatus('red', 'Popup 被封鎖，請允許此網站的彈出視窗後重試');
+                } else if (msg.includes('403') || msg.includes('401')) {
+                    spSetStatus('red', '權限不足，請確認 IT 已授與 API 權限');
+                } else {
+                    spSetStatus('red', '讀取失敗：' + msg.slice(0, 40));
+                }
+                console.error('詳細錯誤：', e);
             }
         };
 
