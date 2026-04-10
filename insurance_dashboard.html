@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保險績效雲端同步儀表板</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js DataLabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- SheetJS for Excel parsing -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+    <!-- MSAL.js for Microsoft 登入 -->
+    <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.10.0/lib/msal-browser.min.js"></script>
+
+    <script>
+    // ╔══════════════════════════════════════════════════════════╗
+    // ║         ★ 請在此填入您的設定（IT提供）★               ║
+    // ╠══════════════════════════════════════════════════════════╣
+    const SP_CONFIG = {
+        clientId:   'a8a67f9f-d169-462b-9be7-f98fbde96426',  // MJ-SharePoint-HTML-Dashboards
+        tenantId:   'organizations',           // 自動支援所有公司帳號（不需填 Tenant ID）
+
+        // ── SharePoint 網站設定 ──────────────────────────────────
+        // siteId 取得方式（二選一）：
+        //   方法 A（推薦）：留空，程式自動用 hostname+path 查詢
+        //   方法 B：手動填入，瀏覽器開啟下列網址取得 GUID：
+        //   https://fetcb107004.sharepoint.com/sites/op0/_api/site/id
+        siteId:     '',                        // 留空 = 自動查詢（推薦）
+
+        // 自動查詢所需（siteId 留空時使用）
+        spHostname: 'fetcb107004.sharepoint.com',
+        spSitePath: '/sites/op0',
+
+        driveId:    '',                        // 留空 = 使用預設文件庫 (Shared Documents)
+        folderPath: 'General/保險/每月投保明細',        // 資料夾路徑（程式會自動掃所有年份子資料夾）
+        filePrefix: '每日業績明細表',          // 檔名前綴，用來過濾非業績檔案
+    };
+    // ╚══════════════════════════════════════════════════════════╝
+    </script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: 4px; }
+        .sync-loading { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-indigo-900 text-white p-4 shadow-md flex flex-wrap justify-between items-center z-10 shrink-0 gap-4">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-white/10 rounded-lg">
+                <i data-lucide="cloud-lightning" class="w-8 h-8 text-indigo-300"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wider">保險績效雲端同步儀表板</h1>
+                <p class="text-[10px] text-indigo-200 opacity-70" id="user-id-display">請點右上角「Microsoft 登入」</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center flex-wrap gap-4">
+            <!-- SharePoint 登入狀態 -->
+            <div class="flex items-center gap-2 bg-indigo-950/50 px-3 py-2 rounded-full border border-white/10">
+                <div id="sync-status-icon" class="w-2 h-2 rounded-full bg-gray-400"></div>
+                <span id="sync-status-text" class="text-xs font-medium text-indigo-100">未登入</span>
+            </div>
+            <!-- 登入 / 重新整理 / 登出 按鈕群 -->
+            <div class="flex items-center gap-2">
+                <button id="btn-sp-login" onclick="spLogin()"
+                    class="bg-blue-500 hover:bg-blue-400 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1">
+                    <i data-lucide="log-in" class="w-3 h-3"></i> Microsoft 登入
+                </button>
+                <button id="btn-sp-refresh" onclick="spLoadFiles()" style="display:none"
+                    class="bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1">
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> 重新載入
+                </button>
+                <button id="btn-sp-logout" onclick="spLogout()" style="display:none"
+                    class="bg-white/10 hover:bg-white/20 text-indigo-100 px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1">
+                    <i data-lucide="log-out" class="w-3 h-3"></i> 登出
+                </button>
+            </div>
+
+            <!-- 年度與月份篩選 -->
+            <div class="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-lg border border-white/20">
+                <i data-lucide="calendar" class="w-4 h-4 text-indigo-200"></i>
+                <select id="filter-year" onchange="analyzeAndRender()" class="bg-transparent text-white text-sm font-bold outline-none cursor-pointer [&>option]:text-gray-800">
+                    <option value="全部">全部年度</option>
+                </select>
+                <span class="text-indigo-300/50">|</span>
+                <select id="filter-month" onchange="analyzeAndRender()" class="bg-transparent text-white text-sm font-bold outline-none cursor-pointer [&>option]:text-gray-800">
+                    <option value="全部">全部月份</option>
+                </select>
+            </div>
+
+            <!-- 狀態篩選按鈕區塊 -->
+            <div class="flex items-center bg-indigo-950 p-1 rounded-lg border border-indigo-800 shadow-inner">
+                <button onclick="setFilter('全部')" id="btn-filter-all" class="px-4 py-1.5 text-sm font-bold rounded-md bg-white text-indigo-900 shadow transition-all">全部</button>
+                <button onclick="setFilter('新保')" id="btn-filter-new" class="px-4 py-1.5 text-sm font-bold rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 transition-all">新保</button>
+                <button onclick="setFilter('續保')" id="btn-filter-renew" class="px-4 py-1.5 text-sm font-bold rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 transition-all">續保</button>
+            </div>
+            
+
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-6 space-y-6">
+        
+        <!-- Summary Cards Row 1 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="glass-card p-6 border-l-4 border-blue-500 flex items-center gap-4">
+                <div class="p-3 bg-blue-100 rounded-full text-blue-600"><i data-lucide="file-text"></i></div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">總保單件數</p>
+                    <p class="text-2xl font-bold text-gray-800" id="totalCases">0 <span class="text-sm font-normal text-gray-500">件</span></p>
+                </div>
+            </div>
+            <div class="glass-card p-6 border-l-4 border-green-500 flex items-center gap-4">
+                <div class="p-3 bg-green-100 rounded-full text-green-600"><i data-lucide="dollar-sign"></i></div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">總保費 (應收保費)</p>
+                    <p class="text-2xl font-bold text-gray-800" id="totalPremium">0 <span class="text-sm font-normal text-gray-500">元</span></p>
+                </div>
+            </div>
+            <div class="glass-card p-6 border-l-4 border-purple-500 flex items-center gap-4">
+                <div class="p-3 bg-purple-100 rounded-full text-purple-600"><i data-lucide="calculator"></i></div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">平均件均保費</p>
+                    <p class="text-2xl font-bold text-gray-800" id="avgPremium">0 <span class="text-sm font-normal text-gray-500">元</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards Row 2 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- MG Structure -->
+            <div class="glass-card p-5 border-l-4 border-[#019ADD] flex flex-col justify-center gap-2">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-blue-50 rounded-full text-[#019ADD]"><i data-lucide="car" class="w-4 h-4"></i></div>
+                    <p class="text-sm text-gray-500 font-medium">車系結構 (MG vs 外車)</p>
+                </div>
+                <div class="flex justify-between items-end text-sm">
+                    <div class="text-[#019ADD] font-bold">MG: <span id="mgCountTxt">0</span>件 <span class="text-[10px] font-normal" id="mgPremTxt"></span></div>
+                    <div class="text-[#610BD7] font-bold">外車: <span id="otherCountTxt">0</span>件 <span class="text-[10px] font-normal" id="otherPremTxt"></span></div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4 flex overflow-hidden">
+                    <div id="mgBar" class="bg-[#019ADD] h-4 transition-all duration-500" style="width: 0%"></div>
+                    <div id="otherBar" class="bg-[#610BD7] h-4 transition-all duration-500" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- Insurance Structure -->
+            <div class="glass-card p-5 border-l-4 border-[#610BD7] flex flex-col justify-center gap-2">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-purple-50 rounded-full text-[#610BD7]"><i data-lucide="activity" class="w-4 h-4"></i></div>
+                    <p class="text-sm text-gray-500 font-medium">投保結構 (任意險 vs 單強制)</p>
+                </div>
+                <div class="flex justify-between items-end text-sm">
+                    <div class="text-[#610BD7] font-bold">任意: <span id="volCountTxt">0</span>件 <span class="text-[10px] font-normal" id="volPremTxt"></span></div>
+                    <div class="text-[#019ADD] font-bold">單強: <span id="compCountTxt">0</span>件 <span class="text-[10px] font-normal" id="compPremTxt"></span></div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4 flex overflow-hidden">
+                    <div id="volBar" class="bg-[#610BD7] h-4 transition-all duration-500" style="width: 0%"></div>
+                    <div id="compBar" class="bg-[#019ADD] h-4 transition-all duration-500" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- Damage Insurance Structure -->
+            <div class="glass-card p-5 border-l-4 border-[#10b981] flex flex-col justify-center gap-2">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-green-50 rounded-full text-[#10b981]"><i data-lucide="shield-check" class="w-4 h-4"></i></div>
+                    <p class="text-sm text-gray-500 font-medium">車體險投保結構</p>
+                </div>
+                <div class="flex justify-between items-end text-sm">
+                    <div class="text-[#10b981] font-bold">有: <span id="dmgCountTxt">0</span>件 <span class="text-[10px] font-normal" id="dmgPremTxt"></span></div>
+                    <div class="text-gray-400 font-bold">無: <span id="noDmgCountTxt">0</span>件 <span class="text-[10px] font-normal" id="noDmgPremTxt"></span></div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4 flex overflow-hidden">
+                    <div id="dmgBar" class="bg-[#10b981] h-4 transition-all duration-500" style="width: 0%"></div>
+                    <div id="noDmgBar" class="bg-gray-300 h-4 transition-all duration-500" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- New vs Renewal Structure -->
+            <div class="glass-card p-5 border-l-4 border-[#6366f1] flex flex-col justify-center gap-2">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-indigo-50 rounded-full text-[#6366f1]"><i data-lucide="refresh-ccw" class="w-4 h-4"></i></div>
+                    <p class="text-sm text-gray-500 font-medium">業務狀態 (新保 vs 續保)</p>
+                </div>
+                <div class="flex justify-between items-end text-sm">
+                    <div class="text-[#10b981] font-bold">新: <span id="newCountTxt">0</span>件 <span class="text-[10px] font-normal" id="newPremTxt"></span></div>
+                    <div class="text-[#6366f1] font-bold">續: <span id="renewCountTxt">0</span>件 <span class="text-[10px] font-normal" id="renewPremTxt"></span></div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4 flex overflow-hidden">
+                    <div id="newBar" class="bg-[#10b981] h-4 transition-all duration-500" style="width: 0%"></div>
+                    <div id="renewBar" class="bg-[#6366f1] h-4 transition-all duration-500" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Production -->
+            <div class="glass-card p-6 col-span-1 lg:col-span-2">
+                <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2"><i data-lucide="trending-up" class="w-5 h-5 text-blue-500"></i> 各營業單位團隊產能 (保單件數)</h2>
+                <div class="chart-container" style="height: 350px;"><canvas id="deptChart"></canvas></div>
+            </div>
+
+            <!-- Insurance Share -->
+            <div class="glass-card p-6 col-span-1 lg:col-span-2">
+                <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2"><i data-lucide="pie-chart" class="w-5 h-5 text-purple-500"></i> 各所保險公司保費佔比</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div><h3 class="text-center text-sm font-bold text-gray-600 mb-2">中壢所</h3><div class="chart-container" style="height: 250px;"><canvas id="companyChartZhongli"></canvas></div></div>
+                    <div><h3 class="text-center text-sm font-bold text-gray-600 mb-2">八德所</h3><div class="chart-container" style="height: 250px;"><canvas id="companyChartBade"></canvas></div></div>
+                    <div><h3 class="text-center text-sm font-bold text-gray-600 mb-2">桃園所</h3><div class="chart-container" style="height: 250px;"><canvas id="companyChartTaoyuan"></canvas></div></div>
+                </div>
+            </div>
+
+            <!-- Ranking Charts -->
+            <div class="glass-card p-6 col-span-1 lg:col-span-2">
+                <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2"><i data-lucide="bar-chart-horizontal" class="w-5 h-5 text-indigo-500"></i> 各保險公司總保費排名</h2>
+                <div class="chart-container" style="height: 400px;"><canvas id="companyTotalPremiumChart"></canvas></div>
+            </div>
+
+            <div class="glass-card p-6 col-span-1 lg:col-span-2">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                    <h2 class="text-lg font-bold text-gray-700 flex items-center gap-2"><i data-lucide="award" class="w-5 h-5 text-yellow-500"></i> 業務員業績與件數排行榜</h2>
+                    <div class="flex items-center gap-4 text-xs font-semibold text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
+                        <span class="flex items-center"><span class="legend-dot" style="background-color: #610BD7;"></span> 中壢所</span>
+                        <span class="flex items-center"><span class="legend-dot" style="background-color: #019DE1;"></span> 桃園所</span>
+                        <span class="flex items-center"><span class="legend-dot" style="background-color: #15CAB6;"></span> 八德所</span>
+                        <span class="flex items-center"><span class="legend-dot" style="background-color: #F6B53D;"></span> 其他部門</span>
+                    </div>
+                </div>
+                <div class="chart-container" style="height: 450px;"><canvas id="repPremiumChart"></canvas></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- Dashboard Logic (standalone, no Firebase) ---
+        Chart.register(ChartDataLabels);
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        let deptChartInstance = null;
+        let companyChartZhongliInstance = null;
+        let companyChartBadeInstance = null;
+        let companyChartTaoyuanInstance = null;
+        let companyTotalPremiumChartInstance = null;
+        let repPremiumChartInstance = null;
+
+        window.globalRawData = null;
+        window.currentStatusFilter = '全部';
+
+        const COLORS = {
+            MG: '#019ADD', OTHER_CAR: '#610BD7', ZHONGLI: '#610BD7', BADE: '#15CAB6', TAOYUAN: '#019DE1', OTHERS: '#F6B53D',
+            TOTAL_PREM_LINE: '#F6B53D', AVG_PREM_LINE: '#8b5cf6'
+        };
+
+        const OTHER_DEPT_REPS = ['黃憶雯', '卓珈琪', '盧莉薇', '顏均珊', '林孟璇', '官彥華', '羅珮潔', '黃依潔'];
+
+        function getMGCarInfo(code) {
+            code = String(code).toUpperCase().trim();
+            const rules = {
+                'BR380': { series: 'G50' }, 'ZS350': { series: 'ZS' }, 'ZS351': { series: 'ZS' }, 'ZQ360': { series: 'ZS' },
+                'ZR360': { series: 'ZS' }, 'ZR361': { series: 'ZS' }, 'ZR362': { series: 'ZS' }, 'ZR366': { series: 'ZS' },
+                'ZR369': { series: 'ZS' }, 'ZS361': { series: 'ZS' }, 'HR38A': { series: 'HS' }, 'HR38B': { series: 'HS' },
+                'HP380': { series: 'HS' }, 'HR380': { series: 'HS' }, 'HR381': { series: 'HS' }, 'HR382': { series: 'HS' },
+                'HR389': { series: 'HS' }, 'HR388': { series: 'HS' }, 'HR500': { series: 'HS' }, 'HR501': { series: 'HS' },
+                'HR506': { series: 'HS' }, 'HP500': { series: 'HS' }, 'HP599': { series: 'HS' }, 'HR700': { series: 'HS' },
+                'HR701': { series: 'HS' }, 'HR710': { series: 'HS' }, 'HR711': { series: 'HS' }, 'HP700': { series: 'HS' },
+                'HP709': { series: 'HS' }, 'HP701': { series: 'HS' }, 'HP719': { series: 'HS' }, 'YQ260': { series: 'MG4' },
+                'YQ380': { series: 'MG4' }, 'YQ381': { series: 'MG4' }
+            };
+            return rules[code] || { series: 'Other' };
+        }
+
+        window.setFilter = function(type) {
+            window.currentStatusFilter = type;
+            const btns = { '全部': document.getElementById('btn-filter-all'), '新保': document.getElementById('btn-filter-new'), '續保': document.getElementById('btn-filter-renew') };
+            for (let key in btns) {
+                btns[key].className = key === type
+                    ? "px-4 py-1.5 text-sm font-bold rounded-md bg-white text-indigo-900 shadow transition-all"
+                    : "px-4 py-1.5 text-sm font-bold rounded-md text-indigo-200 hover:text-white hover:bg-indigo-800 transition-all";
+            }
+            if (window.globalRawData) { window.analyzeAndRender(); } else { window.updateMockDataForFilter(); }
+        };
+
+        window.extractDateOptions = function() {
+            if (!window.globalRawData) return;
+            const years = new Set();
+            const months = new Set();
+            window.globalRawData.forEach(item => {
+                const y = item.year; const m = item.month;
+                if (y && !isNaN(y) && parseInt(y) > 2000) years.add(y);
+                if (m && !isNaN(m) && parseInt(m) >= 1 && parseInt(m) <= 12) months.add(m);
+            });
+            const yearSelect = document.getElementById('filter-year');
+            const monthSelect = document.getElementById('filter-month');
+            yearSelect.innerHTML = '<option value="全部">全部年度</option>';
+            Array.from(years).sort((a,b)=>b-a).forEach(y => { yearSelect.innerHTML += `<option value="${y}">${y}年</option>`; });
+            monthSelect.innerHTML = '<option value="全部">全部月份</option>';
+            Array.from(months).sort((a,b)=>a-b).forEach(m => { monthSelect.innerHTML += `<option value="${m}">${m}月</option>`; });
+        };
+
+
+
+        window.analyzeAndRender = function() {
+            if (!window.globalRawData) return;
+            const data = window.globalRawData;
+            const repsData = {}, deptData = {}, typeData = { '新保': { cases: 0, premium: 0 }, '續保': { cases: 0, premium: 0 } };
+            const companyDataByDept = { '中壢所': {}, '桃園所': {}, '八德所': {} };
+            const companyTotalPrem = {};
+            let totalPrem = 0, totalCases = 0, mgCnt = 0, mgPrem = 0, otherCnt = 0, otherPrem = 0;
+            let volCnt = 0, volPrem = 0, compCnt = 0, compPrem = 0, dmgCnt = 0, dmgPrem = 0, noDmgCnt = 0, noDmgPrem = 0;
+            let colRep = -1, colDept = -1, colComp = -1, colStatus = -1, colPremIndex = -1, colCar = -1, colVolPrem = -1;
+            let colDmgIndices = [];
+            let headerFound = false;
+            const selectedYear = document.getElementById('filter-year').value;
+            const selectedMonth = document.getElementById('filter-month').value;
+
+            data.forEach((item) => {
+                const row = item.row || item;
+                if (!row || row.length < 5) return;
+                const rowStr = String(row.join(','));
+                if (!headerFound) {
+                    if (rowStr.includes('銷售人員') || rowStr.includes('銷售部門')) {
+                        colDept = row.findIndex(c => String(c).includes('銷售部門'));
+                        colRep = row.findIndex(c => String(c).includes('銷售人員'));
+                        colComp = row.findIndex(c => String(c).includes('保險公司'));
+                        colStatus = row.findIndex(c => String(c).includes('新續保'));
+                        colCar = row.findIndex(c => String(c).includes('車型代碼'));
+                        colPremIndex = row.findIndex(c => String(c).includes('應收保費'));
+                        colVolPrem = row.findIndex(c => String(c).includes('任意險合計'));
+                        ['甲式', '乙式', '丙式', '丙式限額', '其他'].forEach(h => {
+                            let idx = row.findIndex(c => String(c).trim() === h);
+                            if (idx !== -1) colDmgIndices.push(idx);
+                        });
+                        headerFound = true;
+                    }
+                    return;
+                }
+                let dept = colDept !== -1 ? String(row[colDept] || '').trim() : '';
+                const rep = colRep !== -1 ? String(row[colRep] || '').trim() : '';
+                if (OTHER_DEPT_REPS.includes(rep)) dept = '其他部門';
+                const company = colComp !== -1 ? String(row[colComp] || '').trim() : '';
+                const status = colStatus !== -1 ? String(row[colStatus] || '').trim() : '';
+                if (!rep || rep === '全部' || rep === '銷售人員' || rowStr.includes('合計') || rowStr.includes('總計')) return;
+                if (window.currentStatusFilter !== '全部' && !status.includes(window.currentStatusFilter)) return;
+                let y = item.year || ''; let m = item.month || '';
+                if (selectedYear !== '全部' && y !== selectedYear) return;
+                if (selectedMonth !== '全部' && m !== selectedMonth) return;
+                let premium = colPremIndex !== -1 ? parseInt(String(row[colPremIndex] || '').replace(/,/g, ''), 10) || 0 : 0;
+                let vPremium = colVolPrem !== -1 ? parseInt(String(row[colVolPrem] || '').replace(/,/g, ''), 10) || 0 : 0;
+                if (premium > 1000000) return;
+                const repKey = `${dept} - ${rep}`;
+                if (!repsData[repKey]) repsData[repKey] = { cases: 0, premium: 0, dept, rep };
+                const isMG = colCar !== -1 && getMGCarInfo(row[colCar] || '').series !== 'Other';
+                if (isMG) { mgCnt++; mgPrem += premium; } else { otherCnt++; otherPrem += premium; }
+                if (vPremium > 0) { volCnt++; volPrem += premium; } else { compCnt++; compPrem += premium; }
+                let dmgTotal = 0;
+                colDmgIndices.forEach(idx => dmgTotal += parseInt(String(row[idx] || '').replace(/,/g, ''), 10) || 0);
+                if (dmgTotal > 0) { dmgCnt++; dmgPrem += premium; } else { noDmgCnt++; noDmgPrem += premium; }
+                if (status.includes('新保')) { typeData['新保'].cases++; typeData['新保'].premium += premium; }
+                else if (status.includes('續保')) { typeData['續保'].cases++; typeData['續保'].premium += premium; }
+                if (!deptData[dept]) deptData[dept] = { cases: 0, premium: 0, mgCases: 0, otherCases: 0 };
+                deptData[dept].cases++; deptData[dept].premium += premium;
+                if (isMG) deptData[dept].mgCases++; else deptData[dept].otherCases++;
+                if (company && company !== '未知公司' && company !== '全部') {
+                    companyTotalPrem[company] = (companyTotalPrem[company] || 0) + premium;
+                    ['中壢所', '桃園所', '八德所'].forEach(d => { if (dept.includes(d)) companyDataByDept[d][company] = (companyDataByDept[d][company] || 0) + premium; });
+                }
+                repsData[repKey].cases++; repsData[repKey].premium += premium;
+                totalCases++; totalPrem += premium;
+            });
+            window.updateDashboardDOM(totalCases, totalPrem, mgCnt, mgPrem, otherCnt, otherPrem, volCnt, volPrem, compCnt, compPrem, dmgCnt, dmgPrem, noDmgCnt, noDmgPrem, typeData, deptData, companyDataByDept, companyTotalPrem, repsData);
+        };
+
+        window.updateDashboardDOM = function(cases, premium, mg, mgPrem, other, otherPrem, vol, volP, comp, compP, dmg, dmgP, noDmg, noDmgP, typeData, deptData, companyData, companyTotalPrem, repsData) {
+            document.getElementById('totalCases').innerHTML = `${cases} <span class="text-sm font-normal text-gray-500">件</span>`;
+            document.getElementById('totalPremium').innerHTML = `$${premium.toLocaleString()} <span class="text-sm font-normal text-gray-500">元</span>`;
+            document.getElementById('avgPremium').innerHTML = `$${(cases > 0 ? Math.round(premium/cases) : 0).toLocaleString()} <span class="text-sm font-normal text-gray-500">元</span>`;
+            const upCard = (c1, p1, c2, p2, b1, b2, tC1, tP1, tC2, tP2, tot) => {
+                document.getElementById(tC1).innerText = c1; document.getElementById(tP1).innerText = `($${p1.toLocaleString()})`;
+                document.getElementById(tC2).innerText = c2; document.getElementById(tP2).innerText = `($${p2.toLocaleString()})`;
+                const r = tot > 0 ? Math.round((c1/tot)*100) : 0;
+                document.getElementById(b1).style.width = r + '%'; document.getElementById(b2).style.width = (100 - r) + '%';
+            };
+            upCard(mg, mgPrem, other, otherPrem, 'mgBar', 'otherBar', 'mgCountTxt', 'mgPremTxt', 'otherCountTxt', 'otherPremTxt', cases);
+            upCard(vol, volP, comp, compP, 'volBar', 'compBar', 'volCountTxt', 'volPremTxt', 'compCountTxt', 'compPremTxt', cases);
+            upCard(dmg, dmgP, noDmg, noDmgP, 'dmgBar', 'noDmgBar', 'dmgCountTxt', 'dmgPremTxt', 'noDmgCountTxt', 'noDmgPremTxt', cases);
+            upCard(typeData['新保'].cases, typeData['新保'].premium, typeData['續保'].cases, typeData['續保'].premium, 'newBar', 'renewBar', 'newCountTxt', 'newPremTxt', 'renewCountTxt', 'renewPremTxt', cases);
+            window.updateCharts(deptData, companyData, companyTotalPrem, repsData);
+        };
+
+        window.updateCharts = function(deptData, companyDataByDept, companyTotalPrem, repsData) {
+            const getCompCol = (n) => {
+                const m = { '新光': '#ef4444', '明台': '#f59e0b', '富邦': '#3b82f6', '國泰': '#22c55e', '第一': '#8b5cf6', '兆豐': '#06b6d4', '華南': '#ea580c', '泰安': '#6366f1', '新安東京': '#ec4899', '旺旺': '#f97316' };
+                for (let k in m) if (n.includes(k)) return m[k];
+                return '#94a3b8';
+            };
+            const sortedDepts = Object.entries(deptData).sort((a, b) => b[1].cases - a[1].cases);
+            if (deptChartInstance) deptChartInstance.destroy();
+            deptChartInstance = new Chart(document.getElementById('deptChart'), {
+                type: 'bar',
+                data: {
+                    labels: sortedDepts.map(i => i[0]),
+                    datasets: [
+                        { type: 'line', label: '總保費', data: sortedDepts.map(i => i[1].premium), borderColor: COLORS.TOTAL_PREM_LINE, backgroundColor: COLORS.TOTAL_PREM_LINE, yAxisID: 'y1', tension: 0.3, pointRadius: 4, datalabels: { display: false } },
+                        { type: 'line', label: '平均保費', data: sortedDepts.map(i => i[1].cases > 0 ? Math.round(i[1].premium/i[1].cases) : 0), borderColor: COLORS.AVG_PREM_LINE, backgroundColor: COLORS.AVG_PREM_LINE, yAxisID: 'y2', borderDash: [5, 5], pointRadius: 4, datalabels: { display: false } },
+                        { label: 'MG 件數', data: sortedDepts.map(i => i[1].mgCases), backgroundColor: COLORS.MG, stack: 'S0', datalabels: { display: false } },
+                        { label: '外車 件數', data: sortedDepts.map(i => i[1].otherCases), backgroundColor: COLORS.OTHER_CAR, stack: 'S0', datalabels: { display: false } }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true }, y1: { position: 'right', ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' } }, y2: { display: false } }, plugins: { datalabels: { display: false } } }
+            });
+            const createPie = (id, inst, data) => {
+                if (inst) inst.destroy();
+                const labels = Object.keys(data), vals = Object.values(data);
+                return new Chart(document.getElementById(id), {
+                    type: 'doughnut',
+                    data: { labels, datasets: [{ data: vals, backgroundColor: labels.map(l => getCompCol(l)) }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } }, datalabels: { display: false } } }
+                });
+            };
+            companyChartZhongliInstance = createPie('companyChartZhongli', companyChartZhongliInstance, companyDataByDept['中壢所']);
+            companyChartBadeInstance = createPie('companyChartBade', companyChartBadeInstance, companyDataByDept['八德所']);
+            companyChartTaoyuanInstance = createPie('companyChartTaoyuan', companyChartTaoyuanInstance, companyDataByDept['桃園所']);
+            const sortedCompTotal = Object.entries(companyTotalPrem).sort((a, b) => b[1] - a[1]);
+            if (companyTotalPremiumChartInstance) companyTotalPremiumChartInstance.destroy();
+            companyTotalPremiumChartInstance = new Chart(document.getElementById('companyTotalPremiumChart'), {
+                type: 'bar',
+                data: {
+                    labels: sortedCompTotal.map(i => i[0]),
+                    datasets: [{ label: '總保費', data: sortedCompTotal.map(i => i[1]), backgroundColor: sortedCompTotal.map(i => getCompCol(i[0])), borderRadius: 6 }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, datalabels: { display: false } }, scales: { x: { ticks: { callback: v => '$' + v.toLocaleString() } }, y: { grid: { display: false } } } }
+            });
+            const sortedReps = Object.values(repsData).sort((a, b) => b.premium - a.premium);
+            if (repPremiumChartInstance) repPremiumChartInstance.destroy();
+            repPremiumChartInstance = new Chart(document.getElementById('repPremiumChart'), {
+                type: 'bar',
+                data: {
+                    labels: sortedReps.map(r => r.rep),
+                    datasets: [{
+                        label: '應收保費',
+                        data: sortedReps.map(r => r.premium),
+                        backgroundColor: sortedReps.map(r => r.dept.includes('中壢') ? COLORS.ZHONGLI : r.dept.includes('桃園') ? COLORS.TAOYUAN : r.dept.includes('八德') ? COLORS.BADE : COLORS.OTHERS),
+                        borderRadius: 4,
+                        casesData: sortedReps.map(r => r.cases)
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, layout: { padding: { top: 30 } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (ctx) => ['應收保費: $' + ctx.raw.toLocaleString(), '成交件數: ' + ctx.dataset.casesData[ctx.dataIndex] + ' 件'] } },
+                        datalabels: { display: true, anchor: 'end', align: 'top', formatter: (value, ctx) => ctx.dataset.casesData[ctx.dataIndex] + '件', font: { weight: 'bold', size: 11 }, color: '#4b5563', padding: 4 }
+                    },
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v.toLocaleString() } }, x: { grid: { display: false } } }
+                }
+            });
+        };
+
+        // ─────────────────────────────────────────────────────────
+        // SharePoint / MSAL 登入與資料讀取
+        // ─────────────────────────────────────────────────────────
+        let msalInstance = null;
+        let spAccount = null;
+
+        function spSetStatus(color, text) {
+            document.getElementById('sync-status-icon').className = `w-2 h-2 rounded-full bg-${color}-500`;
+            document.getElementById('sync-status-text').innerText = text;
+        }
+
+        function spShowButtons(loggedIn) {
+            document.getElementById('btn-sp-login').style.display    = loggedIn ? 'none'  : 'flex';
+            document.getElementById('btn-sp-refresh').style.display  = loggedIn ? 'flex'  : 'none';
+            document.getElementById('btn-sp-logout').style.display   = loggedIn ? 'flex'  : 'none';
+        }
+
+        // 初始化 MSAL（頁面載入後自動執行）
+        async function spInit() {
+            if (!SP_CONFIG.clientId || SP_CONFIG.clientId === 'YOUR_CLIENT_ID') {
+                spSetStatus('yellow', '請填入設定值');
+                return;
+            }
+            try {
+                msalInstance = new msal.PublicClientApplication({
+                    auth: {
+                        clientId: SP_CONFIG.clientId,
+                        authority: `https://login.microsoftonline.com/${SP_CONFIG.tenantId}`,
+                        // iframe（Teams Tab）環境必須關閉 redirect
+                        navigateToLoginRequestUrl: false,
+                    },
+                    cache: { cacheLocation: 'sessionStorage' },
+                    system: {
+                        // 完全禁用 redirect，強制使用 popup
+                        allowRedirectInIframe: false,
+                        windowHashTimeout: 9000,
+                        iframeHashTimeout: 9000,
+                    }
+                });
+                await msalInstance.initialize();
+                // popup 模式：不呼叫 handleRedirectPromise
+                const accounts = msalInstance.getAllAccounts();
+                if (accounts.length > 0) spAccount = accounts[0];
+                if (spAccount) {
+                    spSetStatus('green', spAccount.name || spAccount.username);
+                    spShowButtons(true);
+                    document.getElementById('user-id-display').innerText = spAccount.username;
+                    spLoadFiles();
+                } else {
+                    spSetStatus('gray', '未登入');
+                    spShowButtons(false);
+                }
+            } catch(e) {
+                console.error('MSAL init error', e);
+                spSetStatus('red', 'MSAL 初始化失敗');
+            }
+        }
+
+        window.spLogin = async function() {
+            if (!msalInstance) { alert('MSAL 未初始化，請確認 Client ID 已填寫。'); return; }
+            try {
+                spSetStatus('yellow', '登入中...');
+                const result = await msalInstance.loginPopup({
+                    scopes: ['User.Read', 'Sites.Read.All', 'Files.Read.All']
+                });
+                spAccount = result.account;
+                spSetStatus('green', spAccount.name || spAccount.username);
+                document.getElementById('user-id-display').innerText = spAccount.username;
+                spShowButtons(true);
+                spLoadFiles();
+            } catch(e) {
+                console.error('Login error', e);
+                spSetStatus('red', '登入失敗');
+            }
+        };
+
+        window.spLogout = async function() {
+            if (msalInstance) {
+                await msalInstance.logoutPopup({ account: spAccount });
+                spAccount = null;
+                spSetStatus('gray', '未登入');
+                spShowButtons(false);
+                document.getElementById('user-id-display').innerText = '請點右上角「Microsoft 登入」';
+            }
+        };
+
+        async function spGetToken() {
+            if (!msalInstance || !spAccount) return null;
+            try {
+                const result = await msalInstance.acquireTokenSilent({
+                    scopes: ['Sites.Read.All', 'Files.Read.All'],
+                    account: spAccount
+                });
+                return result.accessToken;
+            } catch(e) {
+                // silent 失敗時彈出互動視窗
+                const result = await msalInstance.acquireTokenPopup({
+                    scopes: ['Sites.Read.All', 'Files.Read.All']
+                });
+                return result.accessToken;
+            }
+        }
+
+        // 從 SharePoint 資料夾列舉並載入所有業績 Excel
+        window.spLoadFiles = async function() {
+            spSetStatus('yellow', '讀取 SharePoint 中...');
+            try {
+                const token = await spGetToken();
+                if (!token) { spSetStatus('red', '無法取得授權'); return; }
+
+                const base = 'https://graph.microsoft.com/v1.0';
+
+                // ── 取得 siteId（若未手動填入則自動查詢）──
+                let resolvedSiteId = SP_CONFIG.siteId;
+                if (!resolvedSiteId) {
+                    const siteUrl = `${base}/sites/${SP_CONFIG.spHostname}:${SP_CONFIG.spSitePath}?$select=id`;
+                    const siteResp = await fetch(siteUrl, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (!siteResp.ok) throw new Error(`查詢 Site ID 失敗: ${siteResp.status} ${await siteResp.text()}`);
+                    const siteJson = await siteResp.json();
+                    resolvedSiteId = siteJson.id;
+                    console.log('自動取得 siteId:', resolvedSiteId);
+                }
+
+                // 組合 Graph API 網址
+                const driveBase = SP_CONFIG.driveId
+                    ? `${base}/sites/${resolvedSiteId}/drives/${SP_CONFIG.driveId}`
+                    : `${base}/sites/${resolvedSiteId}/drive`;
+                const folder = SP_CONFIG.folderPath.replace(/^\//, '');
+                // ── 第一層：列舉根資料夾（找年份子資料夾 + 直接放在根的 xlsx）──
+                const listUrl = `${driveBase}/root:/${folder}:/children?$select=name,id,size,folder&$top=200`;
+
+                const listResp = await fetch(listUrl, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!listResp.ok) throw new Error(`列舉資料夾失敗: ${listResp.status} ${await listResp.text()}`);
+                const listJson = await listResp.json();
+                const rootItems = listJson.value || [];
+
+                // ── 第二層：進入每個「看起來是年份」的子資料夾，收集 xlsx ──
+                const xlsxFiles = [];
+
+                // 根資料夾裡直接放的 xlsx（相容舊結構）
+                rootItems
+                    .filter(f => !f.folder &&
+                        f.name.startsWith(SP_CONFIG.filePrefix) &&
+                        (f.name.endsWith('.xlsx') || f.name.endsWith('.xls')))
+                    .forEach(f => xlsxFiles.push(f));
+
+                // 子資料夾（年份目錄，如 2025、2026…）
+                const yearFolders = rootItems.filter(f =>
+                    f.folder && /^(20\d{2}|1\d{2})$/.test(f.name.trim())
+                );
+
+                for (const yf of yearFolders) {
+                    spSetStatus('yellow', `掃描 ${yf.name} 年資料...`);
+                    const subUrl = `${driveBase}/items/${yf.id}/children?$select=name,id,size&$top=200`;
+                    const subResp = await fetch(subUrl, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (!subResp.ok) { console.warn(`掃描 ${yf.name} 失敗`); continue; }
+                    const subJson = await subResp.json();
+                    (subJson.value || [])
+                        .filter(f =>
+                            f.name.startsWith(SP_CONFIG.filePrefix) &&
+                            (f.name.endsWith('.xlsx') || f.name.endsWith('.xls')))
+                        .forEach(f => xlsxFiles.push(f));
+                }
+
+                if (xlsxFiles.length === 0) {
+                    spSetStatus('yellow', `找不到 ${SP_CONFIG.filePrefix}*.xlsx（已掃 ${yearFolders.length} 個年份資料夾）`);
+                    return;
+                }
+
+                spSetStatus('yellow', `載入 ${xlsxFiles.length} 個檔案...`);
+                let allData = [];
+
+                for (const f of xlsxFiles) {
+                    // 解析檔名取年月
+                    let fileY = '', fileM = '';
+                    let match = f.name.match(/(20\d{2}|11\d|10\d)(0[1-9]|1[0-2])/);
+                    if (!match) match = f.name.match(/(\d{2,4})\s*年\s*(\d{1,2})\s*月/);
+                    if (match) {
+                        let parsedY = parseInt(match[1]);
+                        if (parsedY < 1911 && parsedY > 10) parsedY += 1911;
+                        fileY = parsedY.toString();
+                        fileM = match[2].padStart(2, '0');
+                    }
+
+                    // 下載檔案內容
+                    const dlUrl = `${driveBase}/items/${f.id}/content`;
+                    const dlResp = await fetch(dlUrl, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (!dlResp.ok) { console.warn(`下載 ${f.name} 失敗`); continue; }
+
+                    const buf = await dlResp.arrayBuffer();
+                    const workbook = XLSX.read(new Uint8Array(buf), { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+                    const wrapped = rows.map(row => ({ row, year: fileY, month: fileM }));
+                    allData = allData.concat(wrapped);
+                }
+
+                window.globalRawData = allData;
+                window.extractDateOptions();
+                window.analyzeAndRender();
+                spSetStatus('green', `已載入 ${xlsxFiles.length} 個檔案（${yearFolders.length} 個年份）`);
+
+            } catch(e) {
+                console.error('SharePoint 讀取錯誤', e);
+                spSetStatus('red', '讀取失敗（見 Console）');
+                alert('SharePoint 讀取失敗：\n' + e.message + '\n\n請確認 siteId / folderPath 設定是否正確，或改用手動上傳。');
+            }
+        };
+
+        // 頁面載入時自動嘗試 MSAL 初始化
+        spInit();
+
+        window.updateMockDataForFilter = function() {
+            const mD = { '中壢所': { cases: 66, premium: 1107884, mgCases: 60, otherCases: 6 }, '八德所': { cases: 25, premium: 535809, mgCases: 22, otherCases: 3 }, '桃園所': { cases: 10, premium: 254547, mgCases: 9, otherCases: 1 }, '其他部門': { cases: 3, premium: 40271, mgCases: 1, otherCases: 2 } };
+            const mC = { '中壢所': { '新光產物': 400000, '富邦產物': 286000, '旺旺友聯': 180000 }, '八德所': { '新光產物': 150000, '華南產物': 120000 }, '桃園所': { '新光產物': 70000, '富邦產物': 100000 } };
+            const mCT = { '新光產物': 619945, '富邦產物': 286191, '華南產物': 283177, '新安東京海上': 245799, '旺旺友聯': 208354, '兆豐產物': 161872, '國泰世紀': 116767 };
+            const mT = { '新保': { cases: 9, premium: 206415 }, '續保': { cases: 95, premium: 1732096 } };
+            const mR = {
+                'r1': { cases: 10, premium: 183475, dept: '中壢所', rep: '李秋燕' },
+                'r2': { cases: 8, premium: 157036, dept: '中壢所', rep: '許曉琪' },
+                'r3': { cases: 11, premium: 137209, dept: '中壢所', rep: '邱垂傑' },
+                'r4': { cases: 8, premium: 135465, dept: '中壢所', rep: '李詮瑋' },
+                'r5': { cases: 6, premium: 131958, dept: '中壢所', rep: '陳冠旻' },
+                'r6': { cases: 5, premium: 119536, dept: '桃園所', rep: '李敬平' },
+                'r7': { cases: 6, premium: 106919, dept: '中壢所', rep: '林祐生' },
+                'r8': { cases: 4, premium: 95504, dept: '八德所', rep: '林柏毅' },
+                'r9': { cases: 4, premium: 93005, dept: '八德所', rep: '鄧霖駿' },
+                'r10': { cases: 6, premium: 90566, dept: '八德所', rep: '孔秋萍' }
+            };
+            window.updateDashboardDOM(104, 1938511, 90, 1680000, 14, 258511, 93, 1822938, 11, 115573, 88, 1800000, 16, 138511, mT, mD, mC, mCT, mR);
+        };
+
+        // 頁面載入時若未登入顯示示範數據（spInit 會在登入後覆蓋）
+        window.updateMockDataForFilter();
+    </script>
+</body>
+</html>
