@@ -1297,9 +1297,10 @@ const msalConfig = {
   },
   cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
 };
-const msalApp = new msal.PublicClientApplication(msalConfig);
+let msalApp = null;
 
 async function initAuth() {
+  msalApp = new msal.PublicClientApplication(msalConfig);
   await msalApp.initialize();
   // 處理 redirect 回來的情況
   try { await msalApp.handleRedirectPromise(); } catch(e) {}
