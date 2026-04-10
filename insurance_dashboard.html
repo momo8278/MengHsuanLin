@@ -533,7 +533,7 @@
             try {
                 spSetStatus('yellow', '登入中...');
                 const result = await msalInstance.loginPopup({
-                    scopes: ['User.Read', 'Sites.Read.All', 'Files.Read.All']
+                    scopes: ['Files.Read', 'Sites.Read.All']
                 });
                 spAccount = result.account;
                 spSetStatus('green', spAccount.name || spAccount.username);
@@ -561,7 +561,7 @@
             try {
                 // 優先嘗試靜默刷新（不彈視窗）
                 const result = await msalInstance.acquireTokenSilent({
-                    scopes: ['Sites.Read.All', 'Files.Read.All'],
+                    scopes: ['Files.Read', 'Sites.Read.All'],
                     account: spAccount
                 });
                 return result.accessToken;
