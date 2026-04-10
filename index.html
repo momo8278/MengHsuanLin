@@ -35,10 +35,10 @@
     --green:    #16a34a;
     --green-lt: #22c55e;
 
-    --radius:   14px;
-    --shadow:   0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
-    --shadow-h: 0 4px 12px rgba(0,0,0,0.08), 0 8px 28px rgba(0,0,0,0.06);
-    --font:     'Noto Sans TC', sans-serif;
+    --radius:  14px;
+    --shadow:  0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    --shadow-h:0 4px 12px rgba(0,0,0,0.08), 0 8px 28px rgba(0,0,0,0.06);
+    --font:    'Noto Sans TC', sans-serif;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -65,33 +65,25 @@
   /* ── Header ── */
   .header {
     position: relative; z-index: 10;
-    padding: 0 40px;
-    height: 60px;
+    padding: 0 40px; height: 60px;
     background: rgba(255,255,255,0.88);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
     box-shadow: 0 1px 0 rgba(0,0,0,0.04);
   }
-
   .brand { display: flex; align-items: center; gap: 11px; }
-
   .brand-logo {
     width: 36px; height: 36px;
     background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 700; color: #fff;
-    letter-spacing: -.3px;
+    font-size: 13px; font-weight: 700; color: #fff; letter-spacing: -.3px;
     box-shadow: 0 2px 8px rgba(37,99,235,0.3);
   }
-
-  .brand-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .brand-name { font-size: 14px; font-weight: 600; }
   .brand-sep  { color: var(--dim); font-size: 13px; margin: 0 2px; }
   .brand-sub  { font-size: 13px; color: var(--muted); }
-
-  .hdr-right { display: flex; align-items: center; gap: 10px; }
-
   .hdr-pill {
     font-size: 11px; padding: 4px 11px; border-radius: 20px;
     background: var(--blue-bg); color: var(--blue);
@@ -106,45 +98,29 @@
   }
 
   /* ── Hero ── */
-  .hero {
-    text-align: center;
-    margin-bottom: 56px;
-  }
-
+  .hero { text-align: center; margin-bottom: 56px; }
   .hero-eyebrow {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 11px; font-weight: 500;
     color: var(--blue); letter-spacing: .14em; text-transform: uppercase;
     background: var(--blue-bg); border: 1px solid var(--blue-bd);
-    padding: 4px 12px; border-radius: 20px;
-    margin-bottom: 18px;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 18px;
   }
-
   .hero-eyebrow::before {
-    content: '';
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--blue-lt);
-    animation: blink 2s ease-in-out infinite;
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--blue-lt); animation: blink 2s ease-in-out infinite;
   }
-
   .hero-title {
-    font-size: 28px; font-weight: 300;
-    color: var(--text); line-height: 1.3;
-    margin-bottom: 10px;
+    font-size: 18px; font-weight: 300; line-height: 1.3; margin-bottom: 10px;
   }
-
   .hero-title strong { font-weight: 700; color: var(--blue); }
-
-  .hero-sub {
-    font-size: 13px; color: var(--muted); line-height: 1.6;
-  }
+  .hero-sub { font-size: 13px; color: var(--muted); }
 
   /* ── Section label ── */
   .sec-label {
     display: flex; align-items: center; gap: 10px;
     font-size: 11px; font-weight: 600; color: var(--dim);
-    letter-spacing: .1em; text-transform: uppercase;
-    margin-bottom: 16px;
+    letter-spacing: .1em; text-transform: uppercase; margin-bottom: 16px;
   }
   .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
@@ -162,103 +138,58 @@
     box-shadow: var(--shadow);
     transition: border-color .2s, transform .18s, box-shadow .2s;
   }
-
-  /* 頂端彩線 */
   .card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: var(--accent, var(--blue));
-    opacity: 0; transition: opacity .2s;
+    background: var(--accent, var(--blue)); opacity: 0; transition: opacity .2s;
     border-radius: var(--radius) var(--radius) 0 0;
   }
-
-  .card:hover {
-    border-color: var(--border-h);
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-h);
-  }
+  .card:hover { border-color: var(--border-h); transform: translateY(-3px); box-shadow: var(--shadow-h); }
   .card:hover::before { opacity: 1; }
   .card:active { transform: translateY(0); box-shadow: var(--shadow); }
 
-  /* 置灰 coming soon */
-  .card.coming {
-    opacity: .5; pointer-events: none; box-shadow: none;
-    background: var(--bg3);
-  }
-  .card.coming::before { display: none; }
+  /* ── Card head ── */
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+  .card-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 
-  /* Card head */
-  .card-head {
-    display: flex; align-items: flex-start;
-    justify-content: space-between; margin-bottom: 14px;
-  }
-
-  .card-icon {
-    width: 42px; height: 42px; border-radius: 11px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-  }
-
-  /* status badge */
+  /* ── Status badge ── */
   .status {
     display: flex; align-items: center; gap: 5px;
     font-size: 11px; font-weight: 500;
     padding: 3px 9px; border-radius: 20px; border: 1px solid;
   }
+  .status.online  { color: var(--green);  background: #f0fdf4; border-color: #bbf7d0; }
+  .status.building{ color: var(--dim);    background: var(--bg3); border-color: var(--border); }
 
-  .status.online {
-    color: var(--green); background: #f0fdf4; border-color: #bbf7d0;
-  }
-  .status.building {
-    color: var(--dim); background: var(--bg3); border-color: var(--border);
-  }
-
-  .dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    background: currentColor;
-    animation: blink 2s ease-in-out infinite;
-  }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; animation: blink 2s ease-in-out infinite; }
   .status.building .dot { animation: none; }
-
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  /* Card body */
+  /* ── Card body ── */
   .card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
   .card-desc  { font-size: 11.5px; color: var(--muted); line-height: 1.65; margin-bottom: 15px; min-height: 52px; }
 
-  /* Tags */
   .card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
-  .tag {
-    font-size: 10px; padding: 2px 8px; border-radius: 20px;
-    border: 1px solid; font-weight: 500; white-space: nowrap;
-  }
+  .tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; border: 1px solid; font-weight: 500; white-space: nowrap; }
 
-  /* Arrow */
   .card-arrow {
     position: absolute; bottom: 18px; right: 18px;
     width: 15px; height: 15px; color: var(--dim);
-    transition: color .2s, transform .2s;
-    opacity: 0;
+    transition: color .2s, transform .2s; opacity: 0;
   }
   .card:hover .card-arrow { opacity: 1; color: var(--muted); transform: translate(2px,-2px); }
 
   /* ── Colour themes ── */
-  .t-blue {
-    --accent: var(--blue);
-  }
-  .t-blue .card-icon { background: var(--blue-bg); }
-  .t-blue .tag { color: var(--blue); border-color: var(--blue-bd); background: var(--blue-bg); }
+  .t-blue   { --accent: var(--blue); }
+  .t-blue   .card-icon { background: var(--blue-bg); }
+  .t-blue   .tag { color: var(--blue);   border-color: var(--blue-bd);   background: var(--blue-bg); }
 
-  .t-orange {
-    --accent: var(--orange-lt);
-  }
+  .t-orange { --accent: var(--orange-lt); }
   .t-orange .card-icon { background: var(--orange-bg); }
   .t-orange .tag { color: var(--orange); border-color: var(--orange-bd); background: var(--orange-bg); }
 
-  .t-red {
-    --accent: var(--red-lt);
-  }
-  .t-red .card-icon { background: var(--red-bg); }
-  .t-red .tag { color: var(--red); border-color: var(--red-bd); background: var(--red-bg); }
+  .t-red    { --accent: var(--red-lt); }
+  .t-red    .card-icon { background: var(--red-bg); }
+  .t-red    .tag { color: var(--red);    border-color: var(--red-bd);    background: var(--red-bg); }
 
   /* ── Footer ── */
   .footer {
@@ -271,7 +202,7 @@
   /* ── 進場動畫 ── */
   @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
   .hero      { animation: fadeUp .5s ease both; }
-  .sec-label { animation: fadeUp .5s ease .1s both; }
+  .sec-label { animation: fadeUp .5s ease .10s both; }
   .grid      { animation: fadeUp .5s ease .16s both; }
 
   /* ── RWD ── */
@@ -280,7 +211,7 @@
     .main { padding: 36px 16px 56px; }
     .header { padding: 0 16px; }
     .brand-sep, .brand-sub { display: none; }
-    .hero-title { font-size: 22px; }
+    .hero-title { font-size: 16px; }
   }
 </style>
 </head>
@@ -294,22 +225,18 @@
     <span class="brand-sep">·</span>
     <span class="brand-sub">林孟璇 儀表板中心</span>
   </div>
-  <div class="hdr-right">
-    <span class="hdr-pill">財管部</span>
-  </div>
+  <span class="hdr-pill">財管部</span>
 </header>
 
 <!-- Main -->
 <main class="main">
 
-  <!-- Hero -->
   <div class="hero">
     <div class="hero-eyebrow">Dashboard Hub</div>
     <h1 class="hero-title">選擇要查看的<strong>儀表板</strong></h1>
     <p class="hero-sub">點擊卡片即可進入對應的業績分析頁面</p>
   </div>
 
-  <!-- 我的儀表板 -->
   <div class="sec-label">我的儀表板</div>
   <div class="grid">
 
@@ -345,19 +272,21 @@
       <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
     </a>
 
-    <!-- 3. 服務業績儀表板（建置中） -->
-    <div class="card t-red coming">
+    <!-- 3. 服務業績儀表板 ✅ 正式上線 -->
+    <a href="service_dashboard.html" class="card t-red">
       <div class="card-head">
         <div class="card-icon">🔧</div>
-        <div class="status building"><span class="dot"></span>建置中</div>
+        <div class="status online"><span class="dot"></span>即時</div>
       </div>
       <div class="card-title">服務業績儀表板</div>
       <div class="card-desc">工單分類、保修業績、服務廠效率分析</div>
       <div class="card-tags">
         <span class="tag">工單分類</span>
         <span class="tag">保修業績</span>
+        <span class="tag">效率分析</span>
       </div>
-    </div>
+      <svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+    </a>
 
   </div>
 
