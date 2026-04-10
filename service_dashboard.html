@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>銘勁汽車 MG｜2025 保修業績年度 Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
 <style>
 @font-face {
   font-family: 'MicrosoftJhengHei';
@@ -1347,7 +1347,7 @@ function msalLogout() {
   });
 }
 
-initAuth();
+window.addEventListener("load", initAuth);
 </script>
 </body>
 </html>
