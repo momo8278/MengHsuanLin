@@ -501,7 +501,7 @@
                         // iframe（Teams Tab）環境必須關閉 redirect
                         navigateToLoginRequestUrl: false,
                     },
-                    cache: { cacheLocation: 'sessionStorage' },
+                    cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true },
                     system: {
                         // 完全禁用 redirect，強制使用 popup
                         allowRedirectInIframe: false,
