@@ -179,7 +179,7 @@ body{display:flex;min-height:100vh}
 </div>
 
 <!-- ===== 主畫面 ===== -->
-<div id="main-app" style="display:none">
+<div id="main-app" style="display:none;min-height:100vh;flex:1">
 
 <!-- Sidebar -->
 <div class="sidebar">
@@ -1494,20 +1494,49 @@ async function spLoadAll() {
 
   try {
     const token = await spGetToken();
-
-    // 偵測當前年度
     const currentYear = ovState.year || new Date().getFullYear();
-    const folderPath = SP_CONFIG.dataPath + '/' + currentYear;
 
-    spSetMsg('☁️ 列舉 ' + currentYear + ' 年度資料夾…', 'loading');
-    let files;
-    try {
-      files = await spListFolder(token, folderPath);
-    } catch(e) {
-      spSetMsg('❌ 找不到資料夾：' + folderPath, 'err');
+    // ── 智慧路徑偵測：先列根目錄，找 "Power BI" 開頭的資料夾 ──
+    spSetMsg('☁️ 偵測資料夾路徑中…', 'loading');
+    const driveId = await spGetDriveId(token);
+    
+    // 試幾種常見路徑寫法
+    const candidatePaths = [
+      'Power BI 文件/財會資料/' + currentYear,
+      'Power BI文件/財會資料/' + currentYear,
+      'PowerBI/財會資料/' + currentYear,
+      '財會資料/' + currentYear,
+      'General/財會資料/' + currentYear,
+    ];
+    
+    let files = null;
+    let usedPath = '';
+    
+    for (const p of candidatePaths) {
+      try {
+        spSetMsg('☁️ 嘗試路徑：' + p, 'loading');
+        const encoded = p.split('/').map(encodeURIComponent).join('/');
+        const data = await spGraphGet(token, '/drives/' + driveId + '/root:/' + encoded + ':/children?$select=name,lastModifiedDateTime,@microsoft.graph.downloadUrl&$top=200');
+        files = data.value || [];
+        usedPath = p;
+        break;
+      } catch(e) { /* 繼續試下一個 */ }
+    }
+    
+    // 若都找不到，嘗試列根目錄讓使用者知道有哪些資料夾
+    if (!files) {
+      try {
+        const rootData = await spGraphGet(token, '/drives/' + driveId + '/root/children?$select=name,folder&$top=50');
+        const folderNames = (rootData.value || []).filter(i => i.folder).map(i => i.name).join('、');
+        spSetMsg('❌ 找不到財會資料夾。根目錄資料夾：' + (folderNames || '（空）'), 'err');
+      } catch(e2) {
+        spSetMsg('❌ 無法存取 SharePoint：' + e2.message, 'err');
+      }
       if (btn) btn.style.display = 'block';
       return;
     }
+
+    spSetMsg('☁️ 找到路徑：' + usedPath, 'loading');
 
     // 過濾保修系統 Excel
     const excelFiles = files.filter(f => f.name && f.name.includes('外點財會資料交換整理-保修系統') && f.name.endsWith('.xlsx'));
@@ -1598,7 +1627,9 @@ async function msalLogin() {
 
 function showApp(account) {
   document.getElementById('login-screen').classList.add('hidden');
-  document.getElementById('main-app').style.display = '';
+  const app = document.getElementById('main-app');
+  app.style.display = 'flex';
+  app.style.flex = '1';
   document.getElementById('hdr-username').textContent = '👤 ' + (account.name || account.username);
   // 登入後自動載入 SP 資料
   spLoadAll();
