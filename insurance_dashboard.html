@@ -498,6 +498,7 @@
                     auth: {
                         clientId: SP_CONFIG.clientId,
                         authority: `https://login.microsoftonline.com/${SP_CONFIG.tenantId}`,
+                        redirectUri: 'https://nice-mushroom-0ca7dcd10.7.azurestaticapps.net/insurance_dashboard.html',
                         // iframe（Teams Tab）環境必須關閉 redirect
                         navigateToLoginRequestUrl: false,
                     },
