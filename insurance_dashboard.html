@@ -630,7 +630,7 @@
 
                 for (const yf of yearFolders) {
                     spSetStatus('yellow', `掃描 ${yf.name} 年資料...`);
-                    const subUrl = `${driveBase}/items/${yf.id}/children?$select=name,id,size&$top=200`;
+                    const subUrl = `${driveBase}/items/${yf.id}/children?$select=name,id,size,@microsoft.graph.downloadUrl&$top=200`;
                     const subResp = await fetch(subUrl, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
@@ -663,11 +663,15 @@
                         fileM = match[2].padStart(2, '0');
                     }
 
-                    // 下載檔案內容
-                    const dlUrl = `${driveBase}/items/${f.id}/content`;
-                    const dlResp = await fetch(dlUrl, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
+                    // 下載檔案內容：優先用 @microsoft.graph.downloadUrl（Files.Read 即可），再 fallback 到 /content
+                    let dlResp;
+                    if (f['@microsoft.graph.downloadUrl']) {
+                        dlResp = await fetch(f['@microsoft.graph.downloadUrl']);
+                    } else {
+                        dlResp = await fetch(`${driveBase}/items/${f.id}/content`, {
+                            headers: { Authorization: `Bearer ${token}` }
+                        });
+                    }
                     if (!dlResp.ok) { console.warn(`下載 ${f.name} 失敗`); continue; }
 
                     const buf = await dlResp.arrayBuffer();
