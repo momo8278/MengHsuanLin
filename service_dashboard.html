@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>銘勁汽車 MG｜2025 保修業績年度 Dashboard</title>
+<title>銘勁汽車 MG｜保修業績年度 Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 @font-face {
   font-family: 'MicrosoftJhengHei';
@@ -19,47 +20,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'MicrosoftJhengHei','微軟正黑體',sans-serif;font-size:13px;min-height:100vh}
 
-/* ── MSAL 登入畫面 ── */
-#login-screen{
-  position:fixed;inset:0;z-index:9999;
-  background:linear-gradient(135deg,#0f172a 0%,#1e2a3a 100%);
-  display:flex;align-items:center;justify-content:center;
-}
-#login-screen.hidden{display:none;}
-.login-box{
-  background:#fff;border-radius:16px;padding:40px 48px;
-  text-align:center;max-width:380px;width:90%;
-  box-shadow:0 20px 60px rgba(0,0,0,0.4);
-}
-.login-logo{
-  width:56px;height:56px;background:#e11d48;border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;font-weight:900;color:#fff;letter-spacing:2px;
-  margin:0 auto 16px;
-}
-.login-title{font-size:18px;font-weight:700;color:#0f172a;margin-bottom:6px;}
-.login-sub{font-size:13px;color:#64748b;margin-bottom:28px;line-height:1.6;}
-.login-btn{
-  width:100%;padding:12px;border-radius:8px;border:none;cursor:pointer;
-  background:#2563eb;color:#fff;font-size:14px;font-weight:600;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  transition:background .2s;font-family:inherit;
-}
-.login-btn:hover{background:#1d4ed8;}
-.login-btn img{width:18px;height:18px;}
-.login-error{
-  margin-top:14px;font-size:12px;color:#dc2626;
-  display:none;
-}
-/* Header 使用者資訊 */
-.hdr-user{display:flex;align-items:center;gap:10px;}
-.hdr-username{font-size:12px;color:var(--text2);font-weight:500;}
-.hdr-logout{
-  font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);
-  background:var(--surface2);color:var(--text2);cursor:pointer;
-  font-family:inherit;transition:all .15s;
-}
-.hdr-logout:hover{border-color:#dc2626;color:#dc2626;}
+/* ── Sidebar ── */
 body{display:flex;min-height:100vh}
 .sidebar{width:200px;flex-shrink:0;background:linear-gradient(180deg,#111827 0%,#1e2a3a 100%);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;overflow-y:auto}
 .sidebar-logo{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
@@ -172,9 +133,53 @@ body{display:flex;min-height:100vh}
 .tab.sub.active{background:rgba(255,255,255,.15);color:#fff;border-left-color:#60a5fa;font-weight:700}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .card,.kpi-card{animation:fadeUp .25s ease both}
+
+/* ── 登入畫面 ── */
+#login-screen{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0f172a 0%,#1e2a3a 100%);display:flex;align-items:center;justify-content:center;}
+#login-screen.hidden{display:none;}
+.login-box{background:#fff;border-radius:16px;padding:40px 48px;text-align:center;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
+.login-logo{width:56px;height:56px;background:#e11d48;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;letter-spacing:2px;margin:0 auto 16px;}
+.login-title{font-size:18px;font-weight:700;color:#0f172a;margin-bottom:6px;}
+.login-sub{font-size:13px;color:#64748b;margin-bottom:28px;line-height:1.6;}
+.login-btn{width:100%;padding:12px;border-radius:8px;border:none;cursor:pointer;background:#2563eb;color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s;font-family:inherit;}
+.login-btn:hover{background:#1d4ed8;}
+.login-btn img{width:18px;height:18px;}
+.login-error{margin-top:14px;font-size:12px;color:#dc2626;display:none;}
+/* ── SP 載入狀態列 ── */
+.sp-bar{background:#1e293b;color:#94a3b8;font-size:11px;padding:6px 20px;display:flex;align-items:center;gap:10px;min-height:28px;}
+.sp-bar.ok{color:#22c55e;} .sp-bar.err{color:#f87171;} .sp-bar.loading{color:#fbbf24;}
+.sp-bar .sp-btn{margin-left:auto;padding:3px 12px;border-radius:6px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:11px;cursor:pointer;font-family:inherit;}
+.sp-bar .sp-btn:hover{border-color:#60a5fa;color:#60a5fa;}
+/* ── Header 使用者 ── */
+.hdr-user{display:flex;align-items:center;gap:10px;}
+.hdr-username{font-size:12px;color:var(--text2);font-weight:500;}
+.hdr-logout{font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit;}
+.hdr-logout:hover{border-color:#dc2626;color:#dc2626;}
+/* ── 年度選擇按鈕 ── */
+.year-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;cursor:pointer;font-size:12px;font-weight:500;color:rgba(255,255,255,.5);transition:all .15s;border-radius:6px;margin:2px 8px;}
+.year-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);}
+.year-btn.active{background:rgba(29,97,200,.5);color:#fff;font-weight:700;}
+
 </style>
 </head>
 <body>
+
+<!-- ===== 登入畫面 ===== -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">MG</div>
+    <div class="login-title">銘勁汽車 服務業績儀表板</div>
+    <div class="login-sub">請使用銘勁公司帳號登入<br>以查看服務廠業績數據</div>
+    <button class="login-btn" onclick="msalLogin()">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft">
+      使用 Microsoft 帳號登入
+    </button>
+    <div class="login-error" id="login-error">登入失敗，請確認您的帳號權限或稍後再試。</div>
+  </div>
+</div>
+
+<!-- ===== 主畫面 ===== -->
+<div id="main-app" style="display:none">
 
 <!-- Sidebar -->
 <div class="sidebar">
@@ -213,28 +218,21 @@ body{display:flex;min-height:100vh}
 <!-- Content Wrap -->
 <div class="content-wrap">
 
-<!-- ===== 登入畫面 ===== -->
-<div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">MG</div>
-    <div class="login-title">銘勁汽車 服務業績儀表板</div>
-    <div class="login-sub">請使用銘勁公司帳號登入<br>以查看服務廠業績數據</div>
-    <button class="login-btn" onclick="msalLogin()">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft">
-      使用 Microsoft 帳號登入
-    </button>
-    <div class="login-error" id="login-error">登入失敗，請確認您的帳號權限或稍後再試。</div>
-  </div>
-</div>
-
-<!-- ===== 主畫面 ===== -->
-<div id="main-app" style="display:none;">
+<!-- Top Bar -->
 <div class="header">
   <div>
     <div class="header-title" id="page-title">總覽</div>
-    <div class="header-sub">2025年度 · 行層級精準分類 · 紅利折抵(RRB1)不列入計算 · 含作廢單據</div>
+    <div class="header-sub">行層級精準分類 · 排除 RRB 紅利折抵 · 含作廢單據</div>
   </div>
-  <div style="font-size:11px;color:var(--text3)">2026.03.26</div>
+  <div class="hdr-user" id="hdr-user-area">
+    <span id="hdr-username" style="font-size:12px;color:var(--text2);font-weight:500;"></span>
+    <button class="hdr-logout" onclick="msalLogout()">登出</button>
+  </div>
+</div>
+<!-- SP 狀態列 -->
+<div class="sp-bar" id="sp-bar">
+  <span id="sp-msg">☁️ 連線中…</span>
+  <button class="sp-btn" onclick="spLoadAll()" id="sp-reload-btn" style="display:none">🔄 重新載入</button>
 </div>
 
 <!-- ===== 總覽頁 ===== -->
@@ -1285,41 +1283,313 @@ renderOverview();
 </script>
 </div><!-- /content-wrap -->
 </div><!-- /content-wrap -->
-</div><!-- /main-app -->
 
 <script>
-// ── MSAL 設定 ──
+// ── SP / MSAL 設定 ──────────────────────────────────────────────
+const SP_CONFIG = {
+  clientId: 'a8a67f9f-d169-462b-9be7-f98fbde96426',
+  tenantId: 'fetcb107004.onmicrosoft.com',
+  spHost:   'fetcb107004.sharepoint.com',
+  site:     '/sites/op0',
+  // 財會資料路徑（注意 SharePoint 中的 "文件" 對應 "Documents" 或原始名稱）
+  dataPath: 'Power BI 文件/財會資料',
+  fileName: '外點財會資料交換整理-保修系統_{M}月.xlsx'
+};
+
 const msalConfig = {
   auth: {
-    clientId: 'a8a67f9f-d169-462b-9be7-f98fbde96426',
-    authority: 'https://login.microsoftonline.com/fetcb107004.onmicrosoft.com',
+    clientId: SP_CONFIG.clientId,
+    authority: 'https://login.microsoftonline.com/' + SP_CONFIG.tenantId,
     redirectUri: window.location.origin + '/'
   },
   cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
 };
-let msalApp = null;
+const msalScopes = ['https://graph.microsoft.com/Files.Read', 'https://graph.microsoft.com/Sites.Read.All'];
 
+// 定保品號清單（66個）
+const 定保品號 = new Set([
+  '10004211','10010021','10010243','10010244','10010481','10021772','10064941',
+  '10069278','10073599','10077088-S1','10101437','10105963','10105964','10158205',
+  '10202623','10273425','10296746','10334315','10349552','10354972','10406973',
+  '10407695','10412354','10427930','10442055','10481512','10483230','10501600',
+  '10533615','10550371-S1','10604737','10616367','10625272','10632431','10645866',
+  '10652627','10717853','10726357','10733481','10802698','10811222','10969139',
+  '10974681','10986540','11124596','11263391','24269237','ALU1403','C00138642',
+  'C00164304','C00484435','C00581608','MG650001','MG650002','MG650004','MG650005',
+  'MG650006','MG650007','MG650008','MG650009','MG650011','MG650098','MG650099',
+  'MG650157','MG650219','NLP000130'
+]);
+
+// 外包技師排除清單
+const excludeTech = new Set([
+  '中壢和運','中壢SUM','中壢宣陽','中壢元隆','中壢引擎',
+  'P八德慶達','八德鈑金','八德噴漆','無技師','無',
+  '中壢友達','八德友達','八德慶達','八德陳建興',
+  '中壢慶達','中壢宏曜','中壢板金','平鎮元隆',
+  '八德引電','B八德友達','P八德友達','呂育全'
+]);
+
+let msalApp = null, msalAccount = null, _spDriveId = null, _spSiteId = null;
+
+// ── MSAL 工具函式 ─────────────────────────────────────────────────
+function spSetMsg(msg, cls='') {
+  const bar = document.getElementById('sp-bar');
+  const el = document.getElementById('sp-msg');
+  bar.className = 'sp-bar' + (cls ? ' ' + cls : '');
+  el.textContent = msg;
+}
+
+async function spGetToken() {
+  const req = { scopes: msalScopes, account: msalAccount };
+  try { const r = await msalApp.acquireTokenSilent(req); return r.accessToken; }
+  catch(e) { const r = await msalApp.acquireTokenPopup(req); msalAccount = r.account; return r.accessToken; }
+}
+
+async function spGraphGet(token, path) {
+  const r = await fetch('https://graph.microsoft.com/v1.0' + path, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r.ok) throw new Error('Graph API ' + r.status + ': ' + await r.text());
+  return r.json();
+}
+
+async function spGetDriveId(token) {
+  if (_spDriveId) return _spDriveId;
+  const siteData = await spGraphGet(token, '/sites/' + SP_CONFIG.spHost + ':' + SP_CONFIG.site);
+  _spSiteId = siteData.id;
+  const drivesData = await spGraphGet(token, '/sites/' + _spSiteId + '/drives');
+  const drive = drivesData.value.find(d => d.driveType === 'documentLibrary') || drivesData.value[0];
+  _spDriveId = drive.id;
+  return _spDriveId;
+}
+
+async function spListFolder(token, folderPath) {
+  const driveId = await spGetDriveId(token);
+  const encoded = folderPath.split('/').map(encodeURIComponent).join('/');
+  const data = await spGraphGet(token, '/drives/' + driveId + '/root:/' + encoded + ':/children?$select=name,lastModifiedDateTime,@microsoft.graph.downloadUrl&$top=200');
+  return (data.value || []);
+}
+
+async function spDownloadFile(token, folderPath, fileName) {
+  const driveId = await spGetDriveId(token);
+  const encoded = (folderPath + '/' + fileName).split('/').map(encodeURIComponent).join('/');
+  const meta = await spGraphGet(token, '/drives/' + driveId + '/root:/' + encoded + '?$select=name,@microsoft.graph.downloadUrl,id');
+  let dlUrl = meta['@microsoft.graph.downloadUrl'];
+  if (!dlUrl) {
+    if (!meta.id) throw new Error('無法取得檔案 ID：' + fileName);
+    const r = await fetch('https://graph.microsoft.com/v1.0/drives/' + driveId + '/items/' + meta.id + '/content', {
+      headers: { Authorization: 'Bearer ' + token }, redirect: 'follow'
+    });
+    if (!r.ok) throw new Error('下載失敗：' + fileName);
+    return { name: meta.name || fileName, buffer: await r.arrayBuffer() };
+  }
+  const resp = await fetch(dlUrl);
+  if (!resp.ok) throw new Error('下載失敗：' + fileName);
+  return { name: meta.name, buffer: await resp.arrayBuffer() };
+}
+
+// ── 工單行層級分類 ────────────────────────────────────────────────
+function classifyRow(row) {
+  const 項目名稱 = (row['工作項目名稱'] || '').trim();
+  const 收費對象 = (row['收費對象姓名 '] || row['收費對象姓名'] || '').trim();
+  const 區分     = (row['收費區分'] || '').trim();
+  const 工作碼   = (row['維修技師工作碼'] || '').trim();
+  const 代碼原始 = (row['工作項目代碼'] || '').trim();
+  const 代碼     = 代碼原始.split(' ')[0];
+  const 開頭     = 工作碼[0] || '';
+
+  if (項目名稱.includes('PDI'))                              return 'PDI';
+  if (區分.includes('內轉'))                                 return '內轉';
+  if (收費對象.includes('保險') || 收費對象.includes('產物')) return '保險';
+  if (區分.includes('索賠') || 區分.includes('索賠批退'))     return '索賠';
+  if (項目名稱.includes('定期保養'))                         return '定保';
+  if (定保品號.has(代碼))                                    return '定保';
+  if (['B','P','I'].includes(開頭))                          return '鈑噴';
+  return '引電';
+}
+
+// ── 計算 KPI ─────────────────────────────────────────────────────
+function calcKPI(rows) {
+  const cats = ['引電','定保','索賠','鈑噴','保險','內轉','PDI'];
+  const result = { 台數: 0, 合計_amt: 0, 小計_amt: 0, 平均金額: 0 };
+
+  // 唯一工單集合
+  const allWC = new Set(rows.map(r => r['工單號碼 '] || r['工單號碼']));
+  result.台數 = allWC.size;
+
+  cats.forEach(cat => {
+    const catRows = rows.filter(r => r._分類 === cat);
+    const catWC = new Set(catRows.map(r => r['工單號碼 '] || r['工單號碼']));
+    result[cat + '_wc'] = catWC.size;
+    result[cat + '_amt'] = catRows.reduce((s, r) => s + (Number(r['實際金額']) || 0), 0);
+  });
+
+  // 大分類工單數（聯集去重）
+  result['引電維修_wc'] = new Set(rows.filter(r => ['引電','定保'].includes(r._分類)).map(r => r['工單號碼 '] || r['工單號碼'])).size;
+  result['鈑噴理賠_wc'] = new Set(rows.filter(r => ['鈑噴','保險'].includes(r._分類)).map(r => r['工單號碼 '] || r['工單號碼'])).size;
+  result['索賠補償_wc'] = result['索賠_wc'];
+  result['前3項小計_wc'] = new Set(rows.filter(r => ['引電','定保','索賠','鈑噴','保險'].includes(r._分類)).map(r => r['工單號碼 '] || r['工單號碼'])).size;
+
+  result['合計_amt'] = rows.reduce((s, r) => s + (Number(r['實際金額']) || 0), 0);
+  result['小計_amt'] = rows.filter(r => ['引電','定保','索賠','鈑噴','保險'].includes(r._分類)).reduce((s, r) => s + (Number(r['實際金額']) || 0), 0);
+  result['平均金額'] = result.台數 ? Math.round(result['合計_amt'] / result.台數) : 0;
+
+  // 定保指標
+  result['定保佔引電比'] = result['引電維修_wc'] ? (result['定保_wc'] / result['引電維修_wc'] * 100) : 0;
+  result['定保金額佔比'] = result['小計_amt'] ? (result['定保_amt'] / result['小計_amt'] * 100) : 0;
+  result['定保平均金額'] = result['定保_wc'] ? Math.round(result['定保_amt'] / result['定保_wc']) : 0;
+
+  return result;
+}
+
+// ── 解析 Excel 並建立資料結構 ─────────────────────────────────────
+function parseExcelToRows(buffer) {
+  const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+  const ws = wb.Sheets['營收明細相關'];
+  if (!ws) throw new Error('找不到工作表：營收明細相關');
+  const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+  // 前置過濾：排除 RRB，不過濾作廢
+  return rows.filter(r => {
+    const wc = String(r['維修技師工作碼'] || '').trim();
+    return !wc.startsWith('RRB');
+  });
+}
+
+function buildRAWForYear(yearRows) {
+  // 按廠別、月份分組計算
+  const factories = { total: null, zl: '中壢廠', bd: '八德廠' };
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const result = {};
+
+  Object.entries(factories).forEach(([key, factoryName]) => {
+    const factoryRows = factoryName
+      ? yearRows.filter(r => {
+          const 單位 = (r['單位代號 '] || r['單位代號'] || '').trim();
+          return (單位 === 'MJTBD2' && factoryName === '八德廠') ||
+                 (單位 === 'MJTZL2' && factoryName === '中壢廠');
+        })
+      : yearRows;
+
+    const monthly = months.map(m => {
+      const mNum = parseInt(m);
+      const mRows = factoryRows.filter(r => {
+        const d = r['進廠日期 '] || r['進廠日期'];
+        if (!d) return false;
+        const date = d instanceof Date ? d : new Date(d);
+        return date.getMonth() + 1 === mNum;
+      });
+      return { month: m, ...calcKPI(mRows) };
+    });
+
+    result[key] = { monthly };
+  });
+
+  return result;
+}
+
+// ── 主要載入流程 ──────────────────────────────────────────────────
+async function spLoadAll() {
+  const btn = document.getElementById('sp-reload-btn');
+  if (btn) btn.style.display = 'none';
+  spSetMsg('☁️ 取得授權中…', 'loading');
+
+  try {
+    const token = await spGetToken();
+
+    // 偵測當前年度
+    const currentYear = ovState.year || new Date().getFullYear();
+    const folderPath = SP_CONFIG.dataPath + '/' + currentYear;
+
+    spSetMsg('☁️ 列舉 ' + currentYear + ' 年度資料夾…', 'loading');
+    let files;
+    try {
+      files = await spListFolder(token, folderPath);
+    } catch(e) {
+      spSetMsg('❌ 找不到資料夾：' + folderPath, 'err');
+      if (btn) btn.style.display = 'block';
+      return;
+    }
+
+    // 過濾保修系統 Excel
+    const excelFiles = files.filter(f => f.name && f.name.includes('外點財會資料交換整理-保修系統') && f.name.endsWith('.xlsx'));
+    if (excelFiles.length === 0) {
+      spSetMsg('⚠️ ' + currentYear + ' 年度找不到保修系統資料', 'err');
+      if (btn) btn.style.display = 'block';
+      return;
+    }
+
+    // 下載並解析所有月份
+    let allRows = [];
+    for (let i = 0; i < excelFiles.length; i++) {
+      const f = excelFiles[i];
+      spSetMsg('☁️ 下載 ' + (i+1) + '/' + excelFiles.length + '：' + f.name, 'loading');
+      const dl = await spDownloadFile(token, folderPath, f.name);
+      const rows = parseExcelToRows(dl.buffer);
+
+      // 分類每一行
+      rows.forEach(r => { r._分類 = classifyRow(r); });
+      allRows = allRows.concat(rows);
+    }
+
+    spSetMsg('⚙️ 計算 KPI 中…', 'loading');
+
+    // 建立新的 RAW 資料
+    const newRAW = buildRAWForYear(allRows);
+
+    // 依年度更新對應的全域變數
+    if (currentYear === 2026) {
+      Object.assign(RAW_2026, newRAW);
+    } else if (currentYear === 2025) {
+      Object.assign(RAW, newRAW);
+    } else {
+      // 2027 以後新年度，動態建立
+      window['RAW_' + currentYear] = newRAW;
+    }
+
+    // 更新月份按鈕顯示（隱藏沒資料的月份）
+    const dataMonths = new Set(excelFiles.map(f => {
+      const m = f.name.match(/_(\d+)月/);
+      return m ? parseInt(m[1]) : null;
+    }).filter(Boolean));
+
+    document.querySelectorAll('.fbtn[onclick*="month"]').forEach(b => {
+      const label = b.textContent.trim();
+      const mNum = parseInt(label);
+      if (mNum) b.style.display = dataMonths.has(mNum) ? '' : 'none';
+    });
+
+    // 重新渲染
+    renderOverview();
+
+    const lastFile = excelFiles[excelFiles.length - 1];
+    const lastMod = lastFile.lastModifiedDateTime ? new Date(lastFile.lastModifiedDateTime).toLocaleDateString('zh-TW') : '';
+    spSetMsg('✅ ' + currentYear + ' 年度已載入 ' + excelFiles.length + ' 個月份' + (lastMod ? '（最後更新：' + lastMod + '）' : ''), 'ok');
+    if (btn) btn.style.display = 'block';
+
+  } catch(e) {
+    console.error(e);
+    spSetMsg('❌ 載入失敗：' + e.message, 'err');
+    if (btn) btn.style.display = 'block';
+  }
+}
+
+// ── MSAL 登入 / 登出 ─────────────────────────────────────────────
 async function initAuth() {
   msalApp = new msal.PublicClientApplication(msalConfig);
   await msalApp.initialize();
-  // 處理 redirect 回來的情況
   try { await msalApp.handleRedirectPromise(); } catch(e) {}
   const accounts = msalApp.getAllAccounts();
   if (accounts.length > 0) {
-    showApp(accounts[0]);
+    msalAccount = accounts[0];
+    showApp(msalAccount);
   }
-  // 若無帳號，停留在登入畫面
 }
 
 async function msalLogin() {
   try {
     document.getElementById('login-error').style.display = 'none';
-    await msalApp.loginPopup({
-      scopes: ['User.Read'],
-      prompt: 'select_account'
-    });
+    await msalApp.loginPopup({ scopes: msalScopes, prompt: 'select_account' });
     const accounts = msalApp.getAllAccounts();
-    if (accounts.length > 0) showApp(accounts[0]);
+    if (accounts.length > 0) { msalAccount = accounts[0]; showApp(msalAccount); }
   } catch(e) {
     console.error(e);
     document.getElementById('login-error').style.display = 'block';
@@ -1329,25 +1599,23 @@ async function msalLogin() {
 function showApp(account) {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('main-app').style.display = '';
-  // 顯示使用者名稱在 header
-  const hdrRight = document.querySelector('.header > div:last-child');
-  if (hdrRight) {
-    hdrRight.innerHTML = `
-      <div class="hdr-user">
-        <span class="hdr-username">👤 ${account.name || account.username}</span>
-        <button class="hdr-logout" onclick="msalLogout()">登出</button>
-      </div>`;
-  }
+  document.getElementById('hdr-username').textContent = '👤 ' + (account.name || account.username);
+  // 登入後自動載入 SP 資料
+  spLoadAll();
 }
 
 function msalLogout() {
   msalApp.logoutPopup().then(() => {
     document.getElementById('login-screen').classList.remove('hidden');
     document.getElementById('main-app').style.display = 'none';
+    _spDriveId = null; _spSiteId = null;
+    spSetMsg('☁️ 連線中…', '');
   });
 }
 
-window.addEventListener("load", initAuth);
+window.addEventListener('load', initAuth);
 </script>
+
+</div><!-- /main-app -->
 </body>
 </html>
