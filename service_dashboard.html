@@ -1329,7 +1329,7 @@ const excludeTech = new Set([
   '八德引電','B八德友達','P八德友達','呂育全'
 ]);
 
-let msalApp = null, msalAccount = null, _spDriveId = null, _spSiteId = null;
+let msalApp = null, msalAccount = null, _spDriveId = null, _spSiteId = null, _spDriveName = null;
 
 // ── MSAL 工具函式 ─────────────────────────────────────────────────
 function spSetMsg(msg, cls='') {
@@ -1356,8 +1356,13 @@ async function spGetDriveId(token) {
   const siteData = await spGraphGet(token, '/sites/' + SP_CONFIG.spHost + ':' + SP_CONFIG.site);
   _spSiteId = siteData.id;
   const drivesData = await spGraphGet(token, '/sites/' + _spSiteId + '/drives');
-  const drive = drivesData.value.find(d => d.driveType === 'documentLibrary') || drivesData.value[0];
+  // 優先找名稱為 "Power BI" 的獨立文件庫
+  const drive = drivesData.value.find(d => d.name === 'Power BI')
+             || drivesData.value.find(d => d.name === 'Power BI 文件')
+             || drivesData.value.find(d => d.driveType === 'documentLibrary')
+             || drivesData.value[0];
   _spDriveId = drive.id;
+  _spDriveName = drive.name;
   return _spDriveId;
 }
 
@@ -1502,11 +1507,9 @@ async function spLoadAll() {
     
     // 試幾種常見路徑寫法
     const candidatePaths = [
-      'Power BI 文件/財會資料/' + currentYear,
-      'Power BI文件/財會資料/' + currentYear,
-      'PowerBI/財會資料/' + currentYear,
-      '財會資料/' + currentYear,
-      'General/財會資料/' + currentYear,
+      '財會資料/' + currentYear,         // Power BI 庫根目錄下
+      currentYear.toString(),              // 直接在根目錄
+      'Power BI/財會資料/' + currentYear, // 萬用備用
     ];
     
     let files = null;
@@ -1523,12 +1526,15 @@ async function spLoadAll() {
       } catch(e) { /* 繼續試下一個 */ }
     }
     
-    // 若都找不到，嘗試列根目錄讓使用者知道有哪些資料夾
+    // 若都找不到，列出 Power BI 庫根目錄讓使用者確認
     if (!files) {
       try {
         const rootData = await spGraphGet(token, '/drives/' + driveId + '/root/children?$select=name,folder&$top=50');
         const folderNames = (rootData.value || []).filter(i => i.folder).map(i => i.name).join('、');
-        spSetMsg('❌ 找不到財會資料夾。根目錄資料夾：' + (folderNames || '（空）'), 'err');
+        // 也順便列出所有 drives 名稱
+        const drivesData2 = await spGraphGet(token, '/sites/' + _spSiteId + '/drives');
+        const driveNames = drivesData2.value.map(d => d.name + '(' + d.driveType + ')').join('、');
+        spSetMsg('❌ 找不到財會資料（使用庫：' + (_spDriveName||'?') + '）。根目錄：' + (folderNames||'空') + ' ｜ 所有庫：' + driveNames, 'err');
       } catch(e2) {
         spSetMsg('❌ 無法存取 SharePoint：' + e2.message, 'err');
       }
