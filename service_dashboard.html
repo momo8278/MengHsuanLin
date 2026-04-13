@@ -1446,16 +1446,37 @@ function calcKPI(rows) {
 }
 
 // ── 解析 Excel 並建立資料結構 ─────────────────────────────────────
+// Excel 日期序號轉月份（1900年起算）
+function excelDateToMonth(val) {
+  if (!val) return 0;
+  if (typeof val === 'number') {
+    // Excel date serial: days since 1900-01-01 (with 1900-bug offset)
+    const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+    return d.getUTCMonth() + 1;
+  }
+  if (typeof val === 'string') {
+    const d = new Date(val);
+    if (!isNaN(d)) return d.getMonth() + 1;
+  }
+  if (val instanceof Date) return val.getMonth() + 1;
+  return 0;
+}
+
 function parseExcelToRows(buffer) {
-  const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+  // cellDates:false 讓日期保留序號，我們自己轉換
+  const wb = XLSX.read(new Uint8Array(buffer), { type: 'array', cellDates: false });
   const ws = wb.Sheets['營收明細相關'];
   if (!ws) throw new Error('找不到工作表：營收明細相關');
   const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
 
-  // 前置過濾：排除 RRB，不過濾作廢
+  // 前置過濾：排除 RRB，不過濾作廢；順便預解析月份
   return rows.filter(r => {
     const wc = String(r['維修技師工作碼'] || '').trim();
     return !wc.startsWith('RRB');
+  }).map(r => {
+    const dateVal = r['進廠日期 '] || r['進廠日期'];
+    r._month = excelDateToMonth(dateVal);
+    return r;
   });
 }
 
@@ -1476,12 +1497,7 @@ function buildRAWForYear(yearRows) {
 
     const monthly = months.map(m => {
       const mNum = parseInt(m);
-      const mRows = factoryRows.filter(r => {
-        const d = r['進廠日期 '] || r['進廠日期'];
-        if (!d) return false;
-        const date = d instanceof Date ? d : new Date(d);
-        return date.getMonth() + 1 === mNum;
-      });
+      const mRows = factoryRows.filter(r => r._month === mNum);
       return { month: m, ...calcKPI(mRows) };
     });
 
@@ -1570,13 +1586,13 @@ async function spLoadAll() {
     // 建立新的 RAW 資料
     const newRAW = buildRAWForYear(allRows);
 
-    // 依年度更新對應的全域變數
-    if (currentYear === 2026) {
-      Object.assign(RAW_2026, newRAW);
-    } else if (currentYear === 2025) {
-      Object.assign(RAW, newRAW);
+    // 依年度深層更新 RAW 資料（直接覆蓋 monthly 陣列）
+    const targetRAW = currentYear === 2026 ? RAW_2026 : (currentYear === 2025 ? RAW : null);
+    if (targetRAW) {
+      ['total','zl','bd'].forEach(key => {
+        if (newRAW[key]) targetRAW[key].monthly = newRAW[key].monthly;
+      });
     } else {
-      // 2027 以後新年度，動態建立
       window['RAW_' + currentYear] = newRAW;
     }
 
