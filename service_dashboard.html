@@ -713,18 +713,39 @@ const ovState = { month:"全年", factory:"total", year:2026 };
 
 function getRAW() { return ovState.year===2026 ? RAW_2026 : RAW; }
 
+// ★ 依 RAW 資料動態判斷有資料的月份（避免硬寫）
+function getAvailableMonths(yr) {
+  const raw = yr === 2026 ? RAW_2026 : RAW;
+  if (!raw || !raw.total || !raw.total.monthly) {
+    return yr === 2026 ? new Set([1,2,3]) : new Set([1,2,3,4,5,6,7,8,9,10,11,12]);
+  }
+  const avail = new Set();
+  raw.total.monthly.forEach((m, idx) => {
+    if ((m.台數 || 0) > 0) avail.add(idx + 1);
+  });
+  if (avail.size === 0 && yr === 2026) { avail.add(1); avail.add(2); avail.add(3); }
+  return avail;
+}
+
+// ★ 統一月份按鈕顯示邏輯（總覽＋個人成績的月份按鈕都更新）
+function updateMonthBtns(availMonths) {
+  document.querySelectorAll('.fbtn[onclick*="month"], .fbtn[onclick*="setPerfFilter"]').forEach(b => {
+    const label = b.textContent.trim();
+    const mNum = parseInt(label);
+    if (mNum) b.style.display = availMonths.has(mNum) ? "" : "none";
+  });
+}
+
 function setYear(yr, btn) {
   ovState.year = yr;
   ovState.month = "全年";
   pfState.month = "全年";
   // sidebar 年度 tab 高亮
   document.querySelectorAll('[id^="yr-btn-"]').forEach(b=>b.classList.toggle('active',b===btn));
-  // 月份按鈕顯示控制（總覽+個人成績）
-  const hiddenMonths = yr===2026 ? ["4月","5月","6月","7月","8月","9月","10月","11月","12月"] : [];
-  document.querySelectorAll('.fbtn[onclick*="month"]').forEach(b => {
-    const m = b.textContent.trim();
-    b.style.display = hiddenMonths.includes(m) ? "none" : "";
-    b.classList.toggle('active', m==="全年");
+  // ★ 修正：動態判斷有資料的月份，不硬寫隱藏清單
+  updateMonthBtns(getAvailableMonths(yr));
+  document.querySelectorAll('.fbtn[onclick*="month"], .fbtn[onclick*="setPerfFilter"]').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === "全年");
   });
   renderOverview();
 }
@@ -1274,11 +1295,8 @@ function switchPage(page) {
   });
 });
 
-// 初始化月份按鈕（2026預設隱藏4~12月）
-const hiddenInit = ["4月","5月","6月","7月","8月","9月","10月","11月","12月"];
-document.querySelectorAll('.fbtn[onclick*="month"]').forEach(b => {
-  if(hiddenInit.includes(b.textContent.trim())) b.style.display = "none";
-});
+// ★ 修正：初始化月份按鈕，動態依 RAW 資料判斷
+updateMonthBtns(getAvailableMonths(ovState.year));
 renderOverview();
 </script>
 </div><!-- /content-wrap -->
@@ -1474,7 +1492,7 @@ function parseExcelToRows(buffer) {
     const wc = String(r['維修技師工作碼'] || '').trim();
     return !wc.startsWith('RRB');
   }).map(r => {
-    const dateVal = r['帳款日期 '] || r['帳款日期'];  // ★ 修正：改用帳款日期判斷月份（進廠日期可能跨月）
+    const dateVal = r['帳款日期 '] || r['帳款日期'];  // ★ 改用帳款日期判斷月份
     r._month = excelDateToMonth(dateVal);
     return r;
   });
@@ -1591,22 +1609,24 @@ async function spLoadAll() {
     if (targetRAW) {
       ['total','zl','bd'].forEach(key => {
         if (newRAW[key]) targetRAW[key].monthly = newRAW[key].monthly;
+        // ★ 強制重算年度加總，確保「全年」顯示正確
+        const yr2 = {台數:0, 合計_amt:0, 小計_amt:0, 平均金額:0};
+        CATS_ALL.forEach(c => { yr2[c+'_wc']=0; yr2[c+'_amt']=0; });
+        targetRAW[key].monthly.forEach(m => {
+          yr2.台數     += m.台數     || 0;
+          yr2.合計_amt += m.合計_amt || 0;
+          yr2.小計_amt += m.小計_amt || 0;
+          CATS_ALL.forEach(c => { yr2[c+'_wc'] += m[c+'_wc']||0; yr2[c+'_amt'] += m[c+'_amt']||0; });
+        });
+        yr2.平均金額 = yr2.台數 ? Math.round(yr2.合計_amt / yr2.台數) : 0;
+        targetRAW[key].年度 = yr2;
       });
     } else {
       window['RAW_' + currentYear] = newRAW;
     }
 
-    // 更新月份按鈕顯示（隱藏沒資料的月份）
-    const dataMonths = new Set(excelFiles.map(f => {
-      const m = f.name.match(/_(\d+)月/);
-      return m ? parseInt(m[1]) : null;
-    }).filter(Boolean));
-
-    document.querySelectorAll('.fbtn[onclick*="month"]').forEach(b => {
-      const label = b.textContent.trim();
-      const mNum = parseInt(label);
-      if (mNum) b.style.display = dataMonths.has(mNum) ? '' : 'none';
-    });
+    // ★ 修正：SP 載入後從 RAW 資料動態判斷月份按鈕（不依賴檔名格式）
+    updateMonthBtns(getAvailableMonths(currentYear));
 
     // 重新渲染
     renderOverview();
