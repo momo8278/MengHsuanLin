@@ -1557,7 +1557,7 @@ async function spLoadAll() {
     for (let i = 0; i < excelFiles.length; i++) {
       const f = excelFiles[i];
       spSetMsg('☁️ 下載 ' + (i+1) + '/' + excelFiles.length + '：' + f.name, 'loading');
-      const dl = await spDownloadFile(token, folderPath, f.name);
+      const dl = await spDownloadFile(token, usedPath, f.name);
       const rows = parseExcelToRows(dl.buffer);
 
       // 分類每一行
