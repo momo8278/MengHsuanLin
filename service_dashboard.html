@@ -1591,13 +1591,13 @@ async function spLoadAll() {
     if (targetRAW) {
       ['total','zl','bd'].forEach(key => {
         if (newRAW[key]) targetRAW[key].monthly = newRAW[key].monthly;
-        // ★ 強制重算年度加總（確保「全年」顯示與月份加總一致）
+        // ★ 修正：強制重算年度加總，確保「全年」顯示與各月加總一致
         const yr = {台數:0, 合計_amt:0, 小計_amt:0, 平均金額:0};
         CATS_ALL.forEach(c => { yr[`${c}_wc`]=0; yr[`${c}_amt`]=0; });
         targetRAW[key].monthly.forEach(m => {
-          yr.台數      += m.台數      || 0;
-          yr.合計_amt  += m.合計_amt  || 0;
-          yr.小計_amt  += m.小計_amt  || 0;
+          yr.台數     += m.台數     || 0;
+          yr.合計_amt += m.合計_amt || 0;
+          yr.小計_amt += m.小計_amt || 0;
           CATS_ALL.forEach(c => {
             yr[`${c}_wc`] += m[`${c}_wc`] || 0;
             yr[`${c}_amt`] += m[`${c}_amt`] || 0;
@@ -1610,18 +1610,19 @@ async function spLoadAll() {
       window['RAW_' + currentYear] = newRAW;
     }
 
-    // 更新月份按鈕顯示（依 RAW monthly 中台數>0 判斷，避免檔名格式差異導致遺漏）
+    // ★ 修正：月份按鈕顯示 — 同時用檔名（去掉底線限制）＋RAW資料雙重判斷，避免遺漏
     const dataMonths = new Set();
-    targetRAW
-      ? ['total'].forEach(key => {
-          targetRAW[key].monthly.forEach((m, idx) => {
-            if ((m.台數 || 0) > 0) dataMonths.add(idx + 1);
-          });
-        })
-      : excelFiles.forEach(f => {
-          const mm = f.name.match(/(\d+)月/);
-          if (mm) dataMonths.add(parseInt(mm[1]));
-        });
+    // 方法1：從檔名抓月份數字（放寬 regex，不限定底線開頭）
+    excelFiles.forEach(f => {
+      const m = f.name.match(/(\d+)月/);
+      if (m) dataMonths.add(parseInt(m[1]));
+    });
+    // 方法2：從重算後的 RAW total monthly 補充（台數>0 的月份）
+    if (targetRAW && targetRAW.total && targetRAW.total.monthly) {
+      targetRAW.total.monthly.forEach((m, idx) => {
+        if ((m.台數 || 0) > 0) dataMonths.add(idx + 1);
+      });
+    }
 
     document.querySelectorAll('.fbtn[onclick*="month"]').forEach(b => {
       const label = b.textContent.trim();
