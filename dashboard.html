@@ -4205,7 +4205,7 @@ const SP_CONFIG={
   tgtPath:'General/保險/續保目標',
   platePath:'General/保險/領牌明細'  // 業績明細與續保共用 actPath，新保系統自行篩選
 };
-const msalConfig={auth:{clientId:SP_CONFIG.clientId,authority:'https://login.microsoftonline.com/'+SP_CONFIG.tenantId,redirectUri:'https://nice-mushroom-0ca7dcd10.7.azurestaticapps.net/dashboard.html'},cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}};
+const msalConfig={auth:{clientId:SP_CONFIG.clientId,authority:'https://login.microsoftonline.com/'+SP_CONFIG.tenantId,redirectUri:window.location.origin+window.location.pathname},cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}};
 const msalScopes=['https://graph.microsoft.com/Files.Read','https://graph.microsoft.com/Sites.Read.All'];
 let msalApp,msalAccount,_spSiteId,_spDriveId;
 function spSetStatus(msg,color){const el=document.getElementById('sp-status');el.style.display=msg?'block':'none';el.style.color=color||'#64748b';el.textContent=msg;}
