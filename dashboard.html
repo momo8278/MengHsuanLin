@@ -20,7 +20,7 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);font-size:13px;display:flex;height:100vh;overflow:hidden;align-items:stretch;}
 /* ── 左側欄 ── */
-.sidebar{width:200px;min-width:200px;background:#f8fafc;color:var(--text);display:flex;flex-direction:column;height:100vh;overflow-y:auto;z-index:100;flex-shrink:0;border-right:1px solid var(--border);}
+.sidebar{width:240px;min-width:240px;background:#f8fafc;color:var(--text);display:flex;flex-direction:column;height:100vh;overflow-y:auto;z-index:100;flex-shrink:0;border-right:1px solid var(--border);}
 .sidebar-logo{padding:0 16px;border-bottom:1px solid rgba(255,255,255,.15);display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#12239E 0%,#4472C4 100%);flex-shrink:0;box-sizing:border-box;height:80px;}
 .sidebar-logo .logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#dc2626,#991b1b);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0;}
 .sidebar-logo .logo-text{font-size:11px;line-height:1.4;}
@@ -288,12 +288,12 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
 .an-info-title{font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:4px;}
 .an-ok{background:#F0FDF4;border:0.5px solid #86efac;border-radius:10px;padding:11px 14px;margin-bottom:8px;}
 .an-ok-title{font-size:11px;font-weight:700;color:#15803d;margin-bottom:4px;}
-.an-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px;}
-.an-name{width:52px;flex-shrink:0;font-weight:500;color:var(--text);}
-.an-track{flex:1;background:#f1f5f9;border-radius:4px;height:16px;overflow:hidden;}
+.an-row{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:6px;margin-bottom:5px;font-size:11px;}
+.an-name{font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.an-track{min-width:0;background:#f1f5f9;border-radius:4px;height:16px;overflow:hidden;}
 .an-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:5px;}
 .an-fval{font-size:10px;font-weight:700;color:#fff;white-space:nowrap;}
-.an-val{font-size:10px;font-weight:600;min-width:36px;text-align:right;}
+.an-val{font-size:10px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:4px;}
 .an-sub{font-size:10px;color:#94a3b8;}
 .an-tbl{width:100%;border-collapse:collapse;font-size:11px;}
 .an-tbl th{background:#12239E;color:#fff;font-weight:600;padding:6px 8px;text-align:center;font-size:10px;white-space:nowrap;}
@@ -339,10 +339,10 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
 
   <hr class="sidebar-divider">
 
-  <!-- 每月業績 -->
-  <div class="sidebar-section">每月業績</div>
+  <!-- 續保業績 -->
+  <div class="sidebar-section">續保業績</div>
   <div class="sidebar-item active" id="nav-monthly" onclick="navTo('monthly',this)">
-    <span class="si-icon">📊</span> 業績儀表板
+    <span class="si-icon">📊</span> 續保儀表板
   </div>
   <div class="sidebar-sub">
     <div class="sidebar-item" id="nav-overview" onclick="navToTab('all','nav-overview')"><span class="si-icon">🏠</span> 總覽</div>
@@ -350,6 +350,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     <div class="sidebar-item" id="nav-table" onclick="navToTab('table','nav-table')"><span class="si-icon">📋</span> 業績明細</div>
     <div class="sidebar-item" id="nav-analysis" onclick="navToTab('analysis','nav-analysis')"><span class="si-icon">🎯</span> 業績分析</div>
     <div class="sidebar-item" id="nav-funnel" onclick="navToTab('funnel','nav-funnel')"><span class="si-icon">📞</span> 電訪漏斗</div>
+    <div class="sidebar-item" id="nav-annual" onclick="navToTab('annual','nav-annual')"><span class="si-icon">📅</span> 年度總覽</div>
   </div>
 
   <hr class="sidebar-divider">
@@ -362,16 +363,8 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
   <div class="sidebar-sub">
     <div class="sidebar-item" id="nav-nb-kpi" onclick="navToTab('nb-overview','nav-nb-kpi')"><span class="si-icon">📊</span> 投保總覽</div>
     <div class="sidebar-item" id="nav-nb-table" onclick="navToTab('nb-table','nav-nb-table')"><span class="si-icon">📋</span> 業代明細</div>
+    <div class="sidebar-item" id="nav-nb-annual" onclick="navToTab('nb-annual','nav-nb-annual')"><span class="si-icon">📅</span> 年度總覽</div>
   </div>
-
-  <hr class="sidebar-divider">
-
-  <!-- 年度總覽 -->
-  <div class="sidebar-section">年度</div>
-  <div class="sidebar-item" id="nav-annual" onclick="navToTab('annual','nav-annual')">
-    <span class="si-icon">📅</span> 年度總覽
-  </div>
-
 
   <hr class="sidebar-divider">
   <div class="sidebar-section">SharePoint 同步</div>
@@ -573,9 +566,9 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
   </div>
 
-  <div id="sec-table" style="display:none;padding:24px 0;">
+  <div id="sec-table" style="display:none;padding:24px 32px;">
     <div class="sec-title" style="margin-left:32px;">各部門業績明細 (全欄位完整版)</div>
-    <div class="table-wrap" style="border-radius:0;border-left:none;border-right:none;">
+    <div class="table-wrap">
       <div class="table-controls">
         <button class="filter-btn active" data-f="all" onclick="filterDept('all')">全部</button>
         <button class="filter-btn" data-f="中壢所" onclick="filterDept('中壢所')">中壢所</button>
@@ -775,7 +768,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
 
     <!-- KPI -->
-    <div class="kpi-grid" style="margin-bottom:16px;">
+    <div class="kpi-grid" style="margin-bottom:16px;grid-template-columns:repeat(5,minmax(0,1fr));">
       <div class="kpi-card" style="--accent:#12239E">
         <div class="kpi-label">年度累計 MG 續保率</div>
         <div class="kpi-val" id="ann-mg-r" style="color:var(--blue-dark)">—</div>
@@ -939,6 +932,76 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
     <div id="nb-table-empty" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
       <div style="font-size:13px;">請先上傳新保資料</div>
+    </div>
+  </div>
+
+
+  <!-- ════════ 新保年度總覽 ════════ -->
+  <div id="sec-nb-annual" style="display:none;padding:24px 32px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <div class="sec-title" style="margin:0;">📅 新保業績年度總覽 <span id="nb-ann-year-label" style="color:#4472C4;"></span></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:11px;color:var(--text-muted);" id="nb-ann-months-loaded">已載入月份：無</span>
+        <button onclick="manageNbMonthData()" style="padding:4px 10px;border:1px solid #fca5a5;border-radius:6px;background:#fef2f2;color:#dc2626;font-size:11px;font-family:inherit;cursor:pointer;">🗑 管理月份資料</button>
+      </div>
+    </div>
+
+    <!-- KPI 卡片 -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;">
+      <div class="kpi-card" style="--accent:#12239E">
+        <div class="kpi-label">年度累計新保件數</div>
+        <div class="kpi-val" id="nb-ann-ins-cnt" style="color:var(--blue-dark)">—</div>
+        <div class="kpi-sub" id="nb-ann-ins-sub">領牌總台數</div>
+      </div>
+      <div class="kpi-card" style="--accent:#16a34a">
+        <div class="kpi-label">年度平均投保率</div>
+        <div class="kpi-val" id="nb-ann-ins-rate" style="color:var(--green)">—</div>
+        <div class="kpi-sub">新保件數 ÷ 有效領牌</div>
+      </div>
+      <div class="kpi-card" style="--accent:#4472C4">
+        <div class="kpi-label">年度平均車體險率</div>
+        <div class="kpi-val" id="nb-ann-body-rate" style="color:#4472C4">—</div>
+        <div class="kpi-sub" id="nb-ann-body-sub">有車體險件數</div>
+      </div>
+      <div class="kpi-card" style="--accent:#ca8a04">
+        <div class="kpi-label">年度平均任意險率</div>
+        <div class="kpi-val" id="nb-ann-arb-rate" style="color:var(--yellow)">—</div>
+        <div class="kpi-sub" id="nb-ann-arb-sub">有任意險件數</div>
+      </div>
+      <div class="kpi-card" style="--accent:#185FA5">
+        <div class="kpi-label">年度累計保費</div>
+        <div class="kpi-val" id="nb-ann-prem" style="color:#185FA5;font-size:18px;">—</div>
+        <div class="kpi-sub" id="nb-ann-prem-sub">平均每件保費</div>
+      </div>
+    </div>
+
+    <!-- 每月趨勢折線圖 -->
+    <div class="chart-card" style="margin-bottom:14px;">
+      <h3>📈 各月投保率趨勢（整體投保率 / 車體險率 / 任意險率）</h3>
+      <div id="nb-ann-trend-chart" style="min-height:170px;"></div>
+    </div>
+
+    <!-- 各所年度累計 + 業代排行 -->
+    <div class="chart-grid" style="margin-bottom:14px;">
+      <div class="chart-card">
+        <h3>🏢 各所年度累計投保率</h3>
+        <div id="nb-ann-dept-chart"></div>
+      </div>
+      <div class="chart-card">
+        <h3>💰 個人年度總保費排行</h3>
+        <div id="nb-ann-agent-rank"></div>
+      </div>
+    </div>
+
+    <!-- 月份明細表 -->
+    <div class="sec-title">📋 各月明細彙整</div>
+    <div class="table-wrap">
+      <div class="scroll-wrap" style="max-height:40vh;">
+        <table style="width:100%;">
+          <thead id="nb-ann-tbl-head"></thead>
+          <tbody id="nb-ann-tbl-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -1441,7 +1504,7 @@ function buildCharts(){
   if(!d4.length){c4.innerHTML='<div style="color:#999;font-size:11px;text-align:center;padding:20px 0;">本月篩選範圍內無交接案件</div>';}
   else{d4.forEach(a=>{const pct=Math.min(a.r*100,100);const col=a.r>=1?'#16a34a':a.r>=.7?'#6b21a8':a.r>0?'#ea580c':'#dc2626';c4.innerHTML+=`<div class="bar-row"><span class="bar-name" title="${a.n}">${a.n}</span><div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${col}"></div><div class="bar-tgt" style="left:100%"></div></div><span class="bar-val" style="color:${col}">${a.ha}/${a.ht}</span></div>`;})}
   const depts=['中壢所','八德所','桃園所'];const mgH=[],totH=[];
-  depts.forEach(d=>{const sub=window.SUBTOTALS.find(s=>s.label===d+' 合計');if(sub){if(sub.tt_mg>0){const r=sub.ta_mg/sub.tt_mg;const pct=Math.min(r*100,100);const col=r>=MG_T?'#16a34a':r>=MG_T*.84?'#ca8a04':r>=MG_T*.67?'#ea580c':'#dc2626';mgH.push(`<div class="bar-row"><span class="bar-name" style="width:40px;text-align:left;">${d}</span><div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${col}"></div><div class="bar-tgt" style="left:${MG_T*100}%"></div></div><span class="bar-val" style="width:110px;display:flex;justify-content:flex-end;gap:8px;"><span style="color:var(--text-muted);font-weight:500;">${sub.ta_mg}/${sub.tt_mg}</span><span style="color:${col};width:32px;text-align:right;">${(r*100).toFixed(0)}%</span></span></div>`);}if(sub.tt_tot>0){const r=sub.ta_tot/sub.tt_tot;const pct=Math.min(r*100,100);const col=r>=TOT_T?'#16a34a':r>=TOT_T*.857?'#ca8a04':r>=TOT_T*.714?'#ea580c':'#dc2626';totH.push(`<div class="bar-row"><span class="bar-name" style="width:40px;text-align:left;">${d}</span><div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${col}"></div><div class="bar-tgt" style="left:${TOT_T*100}%"></div></div><span class="bar-val" style="width:110px;display:flex;justify-content:flex-end;gap:8px;"><span style="color:var(--text-muted);font-weight:500;">${sub.ta_tot}/${sub.tt_tot}</span><span style="color:${col};width:32px;text-align:right;">${(r*100).toFixed(0)}%</span></span></div>`);}}}); 
+  depts.forEach(d=>{const sub=window.SUBTOTALS.find(s=>s.label===d+' 合計');if(sub){if(sub.tt_mg>0){const r=sub.ta_mg/sub.tt_mg;const pct=Math.min(r*100,100);const col=r>=MG_T?'#16a34a':r>=MG_T*.84?'#ca8a04':r>=MG_T*.67?'#ea580c':'#dc2626';mgH.push(`<div class="bar-row" style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:8px;"><span style="font-size:10px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d}</span><div class="bar-track" style="min-width:0;"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${col}"></div><div class="bar-tgt" style="left:${MG_T*100}%"></div></div><span style="font-size:10px;font-weight:600;white-space:nowrap;display:flex;gap:6px;"><span style="color:var(--text-muted);font-weight:500;">${sub.ta_mg}/${sub.tt_mg}</span><span style="color:${col};min-width:30px;text-align:right;">${(r*100).toFixed(0)}%</span></span></div>`);}if(sub.tt_tot>0){const r=sub.ta_tot/sub.tt_tot;const pct=Math.min(r*100,100);const col=r>=TOT_T?'#16a34a':r>=TOT_T*.857?'#ca8a04':r>=TOT_T*.714?'#ea580c':'#dc2626';totH.push(`<div class="bar-row" style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:8px;"><span style="font-size:10px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d}</span><div class="bar-track" style="min-width:0;"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${col}"></div><div class="bar-tgt" style="left:${TOT_T*100}%"></div></div><span style="font-size:10px;font-weight:600;white-space:nowrap;display:flex;gap:6px;"><span style="color:var(--text-muted);font-weight:500;">${sub.ta_tot}/${sub.tt_tot}</span><span style="color:${col};min-width:30px;text-align:right;">${(r*100).toFixed(0)}%</span></span></div>`);}}}); 
   document.getElementById('dept-mg-bars').innerHTML=mgH.join('')||'<div style="color:#999;font-size:11px;text-align:center;">尚無資料</div>';
   document.getElementById('dept-tot-bars').innerHTML=totH.join('')||'<div style="color:#999;font-size:11px;text-align:center;">尚無資料</div>';
 
@@ -1483,7 +1546,8 @@ function showSection(tab,btn){
   const annual=document.getElementById('sec-annual'),funnel=document.getElementById('sec-funnel');
   const analysis=document.getElementById('sec-analysis');
   const nbOverview=document.getElementById('sec-nb-overview'),nbTable=document.getElementById('sec-nb-table');
-  const allSecs=[kpi,kpi2,prog,deptProg,charts,table,annual,funnel,analysis,nbOverview,nbTable];
+  const nbAnnual=document.getElementById('sec-nb-annual');
+  const allSecs=[kpi,kpi2,prog,deptProg,charts,table,annual,funnel,analysis,nbOverview,nbTable,nbAnnual];
   allSecs.forEach(s=>{if(s)s.style.display='none';});
   if(tab==='all'){kpi.style.display='';kpi2.style.display='';prog.style.display='';deptProg.style.display='';}
   else if(tab==='charts'){charts.style.display='';}
@@ -1493,6 +1557,7 @@ function showSection(tab,btn){
   else if(tab==='analysis'){analysis.style.display='';renderAnalysis();}
   else if(tab==='nb-overview'){nbOverview.style.display='';renderNbOverview();}
   else if(tab==='nb-table'){nbTable.style.display='';renderNbTable();}
+  else if(tab==='nb-annual'){nbAnnual.style.display='';renderNbAnnual();}
 }
 
 window.renderFromCloud=function(snap){
@@ -2399,7 +2464,7 @@ function renderAnalysis(){
           <div class="an-fill" style="width:${w}%;background:${c.bg};"><span class="an-fval">${Math.round(r*100)}%</span></div>
           <div style="position:absolute;top:0;bottom:0;left:${tgt*100}%;width:1.5px;background:#ea580c;"></div>
         </div>
-        <span class="an-val" style="color:${c.bg};">${s[fa]}/${s[ft]}</span>${gapStr}
+        <span class="an-val"><span style="color:${c.bg};">${s[fa]}/${s[ft]}</span>${gapStr}</span>
       </div>`;
     });
     el.innerHTML=html||'<div style="color:#94a3b8;font-size:11px;">暫無資料</div>';
@@ -3400,8 +3465,10 @@ function nbSwitchMonth(m){
   else { window.NB_DATA = null; }
   const nbOvSec = document.getElementById('sec-nb-overview');
   const nbTblSec = document.getElementById('sec-nb-table');
+  const nbAnnSec = document.getElementById('sec-nb-annual');
   if(nbOvSec&&nbOvSec.style.display!=='none') renderNbOverview();
   if(nbTblSec&&nbTblSec.style.display!=='none') renderNbTable();
+  if(nbAnnSec&&nbAnnSec.style.display!=='none') renderNbAnnual();
 }
 
 // ── 渲染：投保總覽 ──
@@ -3451,38 +3518,44 @@ function renderNbOverview(){
   // 各所橫條
   if(deptBars){
     const THREE = ['中壢所','八德所','桃園所'];
-    let barsHtml = '<div class="sec-title">各所投保率</div>';
+    // 三欄並排卡片
+    let cardsHtml = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:4px;">';
     THREE.forEach(dept=>{
       const dAgents = (d.agents||[]).filter(a=>a.dept===dept);
-      const dIns = dAgents.reduce((s,a)=>s+a.insCnt,0);
+      const dIns  = dAgents.reduce((s,a)=>s+a.insCnt,0);
       const dBody = dAgents.reduce((s,a)=>s+a.bodyCnt,0);
-      const dArb = dAgents.reduce((s,a)=>s+a.arbCnt,0);
-      // 領牌台數：從 uninsured 反推不準，用 insCnt 代替（分母待後續精化）
+      const dArb  = dAgents.reduce((s,a)=>s+a.arbCnt,0);
       const dBodyR = dIns>0?dBody/dIns:0;
-      const dArbR = dIns>0?dArb/dIns:0;
-      barsHtml += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <div style="width:70px;font-size:12px;font-weight:600;color:#475569;flex-shrink:0;">${dept}</div>
-        <div style="flex:1;">
-          <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
-            <span style="font-size:10px;color:#64748b;width:48px;flex-shrink:0;">車體險</span>
-            <div style="flex:1;background:#e2e8f0;border-radius:4px;height:14px;overflow:hidden;">
-              <div style="width:${(dBodyR*100).toFixed(1)}%;background:#4472C4;height:100%;border-radius:4px;transition:width .4s;"></div>
-            </div>
-            <span style="font-size:11px;font-weight:700;color:#4472C4;width:36px;text-align:right;">${(dBodyR*100).toFixed(0)}%</span>
-            <span style="font-size:10px;color:#94a3b8;">(${dBody}/${dIns})</span>
+      const dArbR  = dIns>0?dArb/dIns:0;
+      const bodyCol = dBodyR>=0.9?'#16a34a':dBodyR>=0.7?'#4472C4':dBodyR>=0.5?'#ca8a04':'#ea580c';
+      const arbCol  = dArbR>=0.9?'#16a34a':dArbR>=0.7?'#4472C4':dArbR>=0.5?'#ca8a04':'#ea580c';
+      cardsHtml += `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
+          <span style="font-size:13px;font-weight:700;color:#12239E;">${dept}</span>
+          <span style="font-size:11px;color:#94a3b8;">新保 ${dIns} 件</span>
+        </div>
+        <div style="margin-bottom:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:11px;color:#64748b;">車體險</span>
+            <span style="font-size:12px;font-weight:700;color:${bodyCol};">${(dBodyR*100).toFixed(0)}%　<span style="font-size:10px;font-weight:400;color:#94a3b8;">${dBody}件</span></span>
           </div>
-          <div style="display:flex;gap:4px;align-items:center;">
-            <span style="font-size:10px;color:#64748b;width:48px;flex-shrink:0;">任意險</span>
-            <div style="flex:1;background:#e2e8f0;border-radius:4px;height:14px;overflow:hidden;">
-              <div style="width:${(dArbR*100).toFixed(1)}%;background:#ca8a04;height:100%;border-radius:4px;transition:width .4s;"></div>
-            </div>
-            <span style="font-size:11px;font-weight:700;color:#ca8a04;width:36px;text-align:right;">${(dArbR*100).toFixed(0)}%</span>
-            <span style="font-size:10px;color:#94a3b8;">(${dArb}/${dIns})</span>
+          <div style="background:#e9ecef;border-radius:4px;height:10px;overflow:hidden;">
+            <div style="width:${Math.min(dBodyR*100,100).toFixed(1)}%;background:${bodyCol};height:100%;border-radius:4px;transition:width .5s;"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:11px;color:#64748b;">任意險</span>
+            <span style="font-size:12px;font-weight:700;color:${arbCol};">${(dArbR*100).toFixed(0)}%　<span style="font-size:10px;font-weight:400;color:#94a3b8;">${dArb}件</span></span>
+          </div>
+          <div style="background:#e9ecef;border-radius:4px;height:10px;overflow:hidden;">
+            <div style="width:${Math.min(dArbR*100,100).toFixed(1)}%;background:${arbCol};height:100%;border-radius:4px;transition:width .5s;"></div>
           </div>
         </div>
       </div>`;
     });
-    deptBars.innerHTML = barsHtml;
+    cardsHtml += '</div>';
+    deptBars.innerHTML = cardsHtml;
   }
 
   // 尚未投保清單
@@ -3677,6 +3750,341 @@ function nbRateChip(r){
   if(r>=0.7) return 'y';
   if(r>=0.5) return 'o';
   return 'r';
+}
+
+// ── 新保年度總覽 ──
+function renderNbAnnual(){
+  const data = getNbAnnualData();
+  const months = Object.keys(data).map(Number).sort((a,b)=>a-b);
+
+  // 標頭更新
+  const yearLbl = document.getElementById('nb-ann-year-label');
+  if(yearLbl) yearLbl.textContent = curYear+'年';
+  const mlLbl = document.getElementById('nb-ann-months-loaded');
+  if(mlLbl) mlLbl.textContent = months.length ? curYear+'年 已載入月份：'+months.map(m=>m+'月').join('、') : curYear+'年 已載入月份：無';
+
+  const EMPTY = '<div style="color:#999;font-size:11px;text-align:center;padding:24px 0;">請先上傳新保資料</div>';
+
+  if(!months.length){
+    ['nb-ann-ins-cnt','nb-ann-ins-rate','nb-ann-body-rate','nb-ann-arb-rate','nb-ann-prem'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.textContent='—';
+    });
+    ['nb-ann-trend-chart','nb-ann-dept-chart','nb-ann-agent-rank'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.innerHTML=EMPTY;
+    });
+    document.getElementById('nb-ann-tbl-head').innerHTML='';
+    document.getElementById('nb-ann-tbl-body').innerHTML='';
+    return;
+  }
+
+  // ── 年度加總 ──
+  let totPlate=0,totEff=0,totIns=0,totBody=0,totArb=0,totPrem=0;
+  months.forEach(m=>{
+    const d=data[m];
+    totPlate += d.plateCnt||0;
+    totEff   += (d.effPlateCnt!=null?d.effPlateCnt:d.plateCnt)||0;
+    totIns   += d.insCnt||0;
+    totBody  += d.bodyCnt||0;
+    totArb   += d.arbCnt||0;
+    totPrem  += d.totalPrem||0;
+  });
+  const annInsR  = totEff>0  ? totIns/totEff  : 0;
+  const annBodyR = totIns>0  ? totBody/totIns  : 0;
+  const annArbR  = totIns>0  ? totArb/totIns   : 0;
+  const annAvg   = totIns>0  ? Math.round(totPrem/totIns) : 0;
+
+  // KPI 更新
+  const insCol = annInsR>=1?'var(--green)':annInsR>=0.8?'var(--yellow)':'var(--orange)';
+  const el_ins = document.getElementById('nb-ann-ins-cnt');
+  if(el_ins){el_ins.textContent=totIns; el_ins.style.color='var(--blue-dark)';}
+  document.getElementById('nb-ann-ins-sub').textContent='領牌'+totPlate+'台 / 有效'+totEff+'台';
+  const el_ir = document.getElementById('nb-ann-ins-rate');
+  if(el_ir){el_ir.textContent=(annInsR*100).toFixed(1)+'%'; el_ir.style.color=insCol;}
+  const el_br = document.getElementById('nb-ann-body-rate');
+  if(el_br){el_br.textContent=(annBodyR*100).toFixed(1)+'%'; el_br.style.color='#4472C4';}
+  document.getElementById('nb-ann-body-sub').textContent='有車體險 '+totBody+' 件 / 新保 '+totIns+' 件';
+  const el_ar = document.getElementById('nb-ann-arb-rate');
+  if(el_ar){el_ar.textContent=(annArbR*100).toFixed(1)+'%'; el_ar.style.color='var(--yellow)';}
+  document.getElementById('nb-ann-arb-sub').textContent='有任意險 '+totArb+' 件 / 新保 '+totIns+' 件';
+  const el_p = document.getElementById('nb-ann-prem');
+  if(el_p){el_p.textContent=totPrem>0?'$'+totPrem.toLocaleString():'—';}
+  document.getElementById('nb-ann-prem-sub').textContent=annAvg>0?'平均每件 $'+annAvg.toLocaleString():'';
+
+  // ── 折線趨勢圖 ──
+  renderNbTrendChart(data, months);
+
+  // ── 各所累計橫條 ──
+  renderNbDeptAnnual(data, months);
+
+  // ── 業代排行 ──
+  renderNbAgentRank(data, months);
+
+  // ── 月份明細表 ──
+  renderNbAnnualTable(data, months);
+}
+
+function renderNbTrendChart(data, months){
+  const el=document.getElementById('nb-ann-trend-chart');
+  if(!el) return;
+  const W=el.offsetWidth||700, H=200, padL=42, padR=20, padT=28, padB=32;
+  const cW=W-padL-padR, cH=H-padT-padB;
+  const allM=[1,2,3,4,5,6,7,8,9,10,11,12];
+
+  // 收集所有數值，動態決定 Y 軸範圍
+  const rawVals=[];
+  const rawPts=[];
+  allM.forEach((m,i)=>{
+    if(!data[m]) return;
+    const d=data[m];
+    const eff=(d.effPlateCnt!=null?d.effPlateCnt:d.plateCnt)||0;
+    const x=padL+i/(allM.length-1)*cW;
+    if(eff>0){
+      const r=d.insCnt/eff; rawVals.push(r);
+      rawPts.push({type:'ins',x,r,v:(r*100).toFixed(0),m});
+    }
+    if(d.insCnt>0){
+      const br=d.bodyCnt/d.insCnt, ar=d.arbCnt/d.insCnt;
+      rawVals.push(br,ar);
+      rawPts.push({type:'body',x,r:br,v:(br*100).toFixed(0),m});
+      rawPts.push({type:'arb',x,r:ar,v:(ar*100).toFixed(0),m});
+    }
+  });
+
+  // Y 軸：最小從 0.55 起（給 60% 留白），最大至少 1.05（給 100%+ 留白）
+  const minV = rawVals.length ? Math.min(...rawVals) : 0.6;
+  const maxV = rawVals.length ? Math.max(...rawVals) : 1.1;
+  const yMin = Math.max(0, Math.floor((minV-0.08)*10)/10);  // 往下多留 8pp，以 10% 為格
+  const yMax = Math.min(1.5, Math.ceil((maxV+0.05)*10)/10); // 往上多留 5pp
+  const yRange = yMax - yMin;
+
+  // 將比率轉換為 SVG Y 座標
+  const toY = r => padT + (1-(r-yMin)/yRange)*cH;
+
+  // 分組重新計算 Y
+  const insP=[], bodyP=[], arbP=[];
+  rawPts.forEach(p=>{
+    const pt={x:p.x, y:toY(p.r), v:p.v, m:p.m};
+    if(p.type==='ins')  insP.push(pt);
+    else if(p.type==='body') bodyP.push(pt);
+    else arbP.push(pt);
+  });
+  // 依月份排序
+  [insP,bodyP,arbP].forEach(arr=>arr.sort((a,b)=>a.m-b.m));
+
+  const line=(pts,col,dash='')=>{
+    if(!pts.length) return '';
+    const path=pts.map((p,i)=>(i===0?`M${p.x.toFixed(1)},${p.y.toFixed(1)}`:`L${p.x.toFixed(1)},${p.y.toFixed(1)}`)).join(' ');
+    const dots=pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="${col}" stroke="#fff" stroke-width="1.5"/>
+      <text x="${p.x.toFixed(1)}" y="${(p.y-9).toFixed(1)}" text-anchor="middle" font-size="9" fill="${col}" font-weight="600">${p.v}%</text>`).join('');
+    return `<path d="${path}" fill="none" stroke="${col}" stroke-width="2.5" stroke-dasharray="${dash}" stroke-linejoin="round"/>${dots}`;
+  };
+
+  // Y 軸刻度線（每 10% 一條）
+  let yGridLines='';
+  for(let v=Math.ceil(yMin*10)/10; v<=yMax+0.001; v=Math.round((v+0.1)*10)/10){
+    const gy=toY(v);
+    const isWhole=Math.abs(v*10-Math.round(v*10))<0.001;
+    yGridLines+=`<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W-padR}" y2="${gy.toFixed(1)}" stroke="${isWhole?'#e2e8f0':'#f1f5f9'}" stroke-width="${isWhole?1:0.5}" stroke-dasharray="${isWhole?'':'4,4'}"/>
+      <text x="${padL-4}" y="${(gy+3).toFixed(1)}" text-anchor="end" font-size="8" fill="${isWhole?'#64748b':'#cbd5e1'}">${Math.round(v*100)}%</text>`;
+  }
+
+  const xLabels=allM.map((m,i)=>`<text x="${(padL+i/(allM.length-1)*cW).toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="9" fill="#94a3b8">${m}月</text>`).join('');
+  const legendX=W-162;
+  el.innerHTML=`<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible;">
+    ${yGridLines}
+    ${line(insP,'#16a34a')}
+    ${line(bodyP,'#4472C4','6,3')}
+    ${line(arbP,'#ca8a04','2,3')}
+    ${xLabels}
+    <circle cx="${legendX}" cy="${padT+6}" r="4" fill="#16a34a"/>
+    <text x="${legendX+8}" y="${padT+10}" font-size="9" fill="#16a34a">投保率</text>
+    <line x1="${legendX+52}" y1="${padT+6}" x2="${legendX+68}" y2="${padT+6}" stroke="#4472C4" stroke-width="2" stroke-dasharray="6,3"/>
+    <text x="${legendX+72}" y="${padT+10}" font-size="9" fill="#4472C4">車體險</text>
+    <line x1="${legendX+108}" y1="${padT+6}" x2="${legendX+122}" y2="${padT+6}" stroke="#ca8a04" stroke-width="2" stroke-dasharray="2,3"/>
+    <text x="${legendX+126}" y="${padT+10}" font-size="9" fill="#ca8a04">任意險</text>
+  </svg>`;
+}
+
+function renderNbDeptAnnual(data, months){
+  const el=document.getElementById('nb-ann-dept-chart');
+  if(!el) return;
+  const THREE=['中壢所','八德所','桃園所'];
+  const dTot={};
+  THREE.forEach(d=>dTot[d]={ins:0,body:0,arb:0,prem:0});
+  months.forEach(m=>{
+    const agents=(data[m].agents)||[];
+    THREE.forEach(dept=>{
+      const da=agents.filter(a=>a.dept===dept);
+      dTot[dept].ins  += da.reduce((s,a)=>s+a.insCnt,0);
+      dTot[dept].body += da.reduce((s,a)=>s+a.bodyCnt,0);
+      dTot[dept].arb  += da.reduce((s,a)=>s+a.arbCnt,0);
+      dTot[dept].prem += da.reduce((s,a)=>s+(a.prem||0),0);
+    });
+  });
+  let html='';
+  THREE.forEach(dept=>{
+    const dt=dTot[dept];
+    const bodyR=dt.ins>0?dt.body/dt.ins:0;
+    const arbR =dt.ins>0?dt.arb/dt.ins:0;
+    const bodyCol=bodyR>=0.8?'#16a34a':bodyR>=0.6?'#ca8a04':'#ea580c';
+    const arbCol =arbR>=0.8?'#16a34a':arbR>=0.6?'#ca8a04':'#ea580c';
+    html+=`<div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:5px;">${dept}　<span style="font-weight:400;color:#94a3b8;">新保${dt.ins}件</span></div>
+      <div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="font-size:10px;color:#64748b;">車體險</span>
+        <div style="background:#e9ecef;border-radius:4px;height:10px;overflow:hidden;min-width:0;">
+          <div style="width:${Math.min(bodyR*100,100).toFixed(1)}%;background:${bodyCol};height:100%;border-radius:4px;transition:width .5s;"></div>
+        </div>
+        <span style="font-size:10px;font-weight:700;color:${bodyCol};white-space:nowrap;">${(bodyR*100).toFixed(0)}%　<span style="font-weight:400;color:#94a3b8;">${dt.body}件</span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:6px;">
+        <span style="font-size:10px;color:#64748b;">任意險</span>
+        <div style="background:#e9ecef;border-radius:4px;height:10px;overflow:hidden;min-width:0;">
+          <div style="width:${Math.min(arbR*100,100).toFixed(1)}%;background:${arbCol};height:100%;border-radius:4px;transition:width .5s;"></div>
+        </div>
+        <span style="font-size:10px;font-weight:700;color:${arbCol};white-space:nowrap;">${(arbR*100).toFixed(0)}%　<span style="font-weight:400;color:#94a3b8;">${dt.arb}件</span></span>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html||'<div style="color:#999;font-size:11px;">暫無資料</div>';
+}
+
+function renderNbAgentRank(data, months){
+  const el=document.getElementById('nb-ann-agent-rank');
+  if(!el) return;
+  const agMap={};
+  months.forEach(m=>{
+    (data[m].agents||[]).forEach(a=>{
+      if(!agMap[a.name]) agMap[a.name]={name:a.name,dept:a.dept,ins:0,body:0,arb:0,prem:0};
+      agMap[a.name].ins  += a.insCnt||0;
+      agMap[a.name].body += a.bodyCnt||0;
+      agMap[a.name].arb  += a.arbCnt||0;
+      agMap[a.name].prem += a.prem||0;
+    });
+  });
+  const ranked=Object.values(agMap).filter(a=>a.prem>0).sort((a,b)=>b.prem-a.prem).slice(0,15);
+  if(!ranked.length){el.innerHTML='<div style="color:#999;font-size:11px;">暫無資料</div>';return;}
+  const maxPrem=ranked[0].prem;
+  let html='';
+  ranked.forEach((a,i)=>{
+    const pct=(a.prem/maxPrem*100).toFixed(1);
+    const barCol = i===0?'#185FA5':i===1?'#2479b5':i===2?'#3589c0':'#4472C4';
+    const txtCol = i<3?'#185FA5':'#4472C4';
+    const rankLabel = i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="font-size:10px;color:#94a3b8;">#${i+1}</span>`;
+    const nameW = i<3?700:500;
+    const bodyR = a.ins>0?(a.body/a.ins*100).toFixed(0):'—';
+    const arbR  = a.ins>0?(a.arb/a.ins*100).toFixed(0):'—';
+    html+=`<div style="display:flex;align-items:center;gap:0;margin-bottom:4px;min-height:22px;">
+      <div style="width:22px;text-align:center;flex-shrink:0;font-size:11px;line-height:1;">${rankLabel}</div>
+      <div style="width:52px;flex-shrink:0;font-size:11px;font-weight:${nameW};color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:4px;" title="${a.name}">${a.name}</div>
+      <div style="flex:1;min-width:0;position:relative;height:16px;background:#f1f5f9;border-radius:3px;overflow:hidden;">
+        <div style="width:${pct}%;background:${barCol};height:100%;border-radius:3px;transition:width .5s;"></div>
+      </div>
+      <div style="flex-shrink:0;padding-left:8px;text-align:right;white-space:nowrap;">
+        <span style="font-size:11px;font-weight:700;color:${txtCol};">$${Math.round(a.prem).toLocaleString()}</span>
+        <span style="font-size:9px;color:#94a3b8;margin-left:4px;">車體${bodyR}% 任意${arbR}%</span>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function renderNbAnnualTable(data, months){
+  const thead=document.getElementById('nb-ann-tbl-head');
+  const tbody=document.getElementById('nb-ann-tbl-body');
+  if(!thead||!tbody) return;
+  const H0='background:#12239E;color:#fff;', H1='background:#12239E;color:#fff;', H2='background:#2563a8;color:#fff;', H3='background:#3a7abf;color:#fff;';
+  thead.innerHTML=`<tr style="font-size:12px;position:sticky;top:0;z-index:2;">
+    <th style="padding:8px 10px;text-align:center;${H0}">月份</th>
+    <th style="padding:8px 10px;text-align:center;${H0}">領牌台數</th>
+    <th style="padding:8px 10px;text-align:center;${H0}">有效領牌</th>
+    <th style="padding:8px 10px;text-align:center;${H0}">新保件數</th>
+    <th style="padding:8px 10px;text-align:center;${H1}">投保率</th>
+    <th style="padding:8px 10px;text-align:center;${H1}">車體險件數</th>
+    <th style="padding:8px 10px;text-align:center;${H1}">車體險率</th>
+    <th style="padding:8px 10px;text-align:center;${H2}">任意險件數</th>
+    <th style="padding:8px 10px;text-align:center;${H2}">任意險率</th>
+    <th style="padding:8px 10px;text-align:center;${H3}">總保費</th>
+    <th style="padding:8px 10px;text-align:center;${H3}">平均保費</th>
+  </tr>`;
+  let rows='';
+  months.forEach((m,idx)=>{
+    const d=data[m];
+    const eff=(d.effPlateCnt!=null?d.effPlateCnt:d.plateCnt)||0;
+    const insR =eff>0?d.insCnt/eff:0;
+    const bodyR=d.insCnt>0?d.bodyCnt/d.insCnt:0;
+    const arbR =d.insCnt>0?d.arbCnt/d.insCnt:0;
+    const avg  =d.insCnt>0?Math.round((d.totalPrem||0)/d.insCnt):0;
+    const insCol=insR>=1?'#16a34a':insR>=0.8?'#ca8a04':'#ea580c';
+    const bg=idx%2?'#f8fafc':'#fff';
+    rows+=`<tr style="background:${bg};font-size:12px;">
+      <td style="padding:6px 10px;text-align:center;font-weight:600;">${curYear}年 ${m}月</td>
+      <td style="padding:6px 10px;text-align:center;">${d.plateCnt}</td>
+      <td style="padding:6px 10px;text-align:center;color:#64748b;">${eff}</td>
+      <td style="padding:6px 10px;text-align:center;font-weight:600;">${d.insCnt}</td>
+      <td style="padding:6px 10px;text-align:center;background:#eef4ff;"><span class="chip chip-${nbRateChip(insR)}">${(insR*100).toFixed(1)}%</span></td>
+      <td style="padding:6px 10px;text-align:center;background:#eef4ff;">${d.bodyCnt}</td>
+      <td style="padding:6px 10px;text-align:center;background:#eef4ff;"><span class="chip chip-${nbRateChip(bodyR)}">${(bodyR*100).toFixed(1)}%</span></td>
+      <td style="padding:6px 10px;text-align:center;background:#fffbeb;">${d.arbCnt}</td>
+      <td style="padding:6px 10px;text-align:center;background:#fffbeb;"><span class="chip chip-${nbRateChip(arbR)}">${(arbR*100).toFixed(1)}%</span></td>
+      <td style="padding:6px 10px;text-align:center;background:#f0fdf4;">${(d.totalPrem||0)>0?'$'+(d.totalPrem).toLocaleString():'—'}</td>
+      <td style="padding:6px 10px;text-align:center;background:#f0fdf4;">${avg>0?'$'+avg.toLocaleString():'—'}</td>
+    </tr>`;
+  });
+  // 合計列
+  const totEff2=months.reduce((s,m)=>{const d=data[m];return s+((d.effPlateCnt!=null?d.effPlateCnt:d.plateCnt)||0);},0);
+  const totIns2=months.reduce((s,m)=>s+(data[m].insCnt||0),0);
+  const totBody2=months.reduce((s,m)=>s+(data[m].bodyCnt||0),0);
+  const totArb2=months.reduce((s,m)=>s+(data[m].arbCnt||0),0);
+  const totPrem2=months.reduce((s,m)=>s+(data[m].totalPrem||0),0);
+  const totPlate2=months.reduce((s,m)=>s+(data[m].plateCnt||0),0);
+  const tInsR=totEff2>0?totIns2/totEff2:0;
+  const tBodyR=totIns2>0?totBody2/totIns2:0;
+  const tArbR=totIns2>0?totArb2/totIns2:0;
+  const tAvg=totIns2>0?Math.round(totPrem2/totIns2):0;
+  rows+=`<tr style="background:#1e293b;color:#fff;font-weight:700;font-size:12px;">
+    <td style="padding:8px 10px;text-align:center;">年度合計</td>
+    <td style="padding:8px 10px;text-align:center;">${totPlate2}</td>
+    <td style="padding:8px 10px;text-align:center;">${totEff2}</td>
+    <td style="padding:8px 10px;text-align:center;">${totIns2}</td>
+    <td style="padding:8px 10px;text-align:center;">${(tInsR*100).toFixed(1)}%</td>
+    <td style="padding:8px 10px;text-align:center;">${totBody2}</td>
+    <td style="padding:8px 10px;text-align:center;">${(tBodyR*100).toFixed(1)}%</td>
+    <td style="padding:8px 10px;text-align:center;">${totArb2}</td>
+    <td style="padding:8px 10px;text-align:center;">${(tArbR*100).toFixed(1)}%</td>
+    <td style="padding:8px 10px;text-align:center;">${totPrem2>0?'$'+totPrem2.toLocaleString():'—'}</td>
+    <td style="padding:8px 10px;text-align:center;">${tAvg>0?'$'+tAvg.toLocaleString():'—'}</td>
+  </tr>`;
+  tbody.innerHTML=rows;
+}
+
+function manageNbMonthData(){
+  const data=getNbAnnualData();
+  const months=Object.keys(data).map(Number).sort((a,b)=>a-b);
+  if(!months.length){alert('目前無新保年度資料。');return;}
+  const ov=document.createElement('div');
+  ov.className='ann-mgr-overlay';
+  ov.innerHTML=`<div class="ann-mgr-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <span style="font-weight:700;font-size:14px;">管理新保月份資料（${curYear}年）</span>
+      <button onclick="this.closest('.ann-mgr-overlay').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#94a3b8;">×</button>
+    </div>
+    <div style="margin-bottom:12px;">
+      <button onclick="if(confirm('確定清除${curYear}年全部新保資料？')){saveNbAnnualData({});renderNbAnnual();this.closest('.ann-mgr-overlay').remove();}" style="padding:6px 14px;border:1px solid #fca5a5;border-radius:8px;background:#fef2f2;color:#dc2626;font-size:12px;cursor:pointer;font-family:inherit;">清除全部</button>
+    </div>
+    <div id="nb-mgr-list"></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const list=document.getElementById('nb-mgr-list');
+  months.forEach(m=>{
+    const d=data[m];
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:12px;';
+    row.innerHTML=`<span>${curYear}年 ${m}月　領牌${d.plateCnt||0}台 / 新保${d.insCnt||0}件</span>
+      <button style="padding:3px 10px;border:1px solid #fca5a5;border-radius:6px;background:#fef2f2;color:#dc2626;font-size:11px;cursor:pointer;font-family:inherit;"
+        onclick="(()=>{const dd=getNbAnnualData();delete dd[${m}];saveNbAnnualData(dd);renderNbAnnual();this.closest('[style]').remove();if(!Object.keys(dd).length){document.querySelector('.ann-mgr-overlay').remove();}})()">刪除</button>`;
+    list.appendChild(row);
+  });
 }
 
 // ── 篩選按鈕狀態 ──
