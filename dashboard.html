@@ -60,9 +60,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .kpi-grid-2{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px;width:100%;box-sizing:border-box;}
 .kpi-card{background:var(--card-bg);border-radius:10px;padding:16px 18px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;overflow:hidden;}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--blue-1));}
-.kpi-label{font-size:11px;color:var(--text-muted);margin-bottom:6px;}
+.kpi-label{font-size:13px;color:var(--text-muted);margin-bottom:6px;}
 .kpi-val{font-size:28px;font-weight:700;line-height:1;transition:color 0.3s;}
-.kpi-sub{font-size:11px;color:var(--text-muted);margin-top:5px;}
+.kpi-sub{font-size:12px;color:var(--text-muted);margin-top:5px;}
 .badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:500;margin-left:6px;}
 .badge-g{background:var(--chip-g);color:var(--chip-g-t);}
 .badge-y{background:var(--chip-y);color:var(--chip-y-t);}
@@ -78,14 +78,14 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .sec-title{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px;padding-left:10px;border-left:3px solid var(--blue-1);}
 .chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:16px;width:100%;box-sizing:border-box;min-width:0;}
 .chart-card{background:var(--card-bg);border-radius:10px;padding:16px 18px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);}
-.chart-card h3{font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px;}
-.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:11px;}
-.bar-name{width:56px;text-align:right;color:var(--text-muted);flex-shrink:0;font-size:10px;overflow:hidden;text-overflow:ellipsis;}
+.chart-card h3{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px;}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px;}
+.bar-name{width:56px;text-align:right;color:var(--text-muted);flex-shrink:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;}
 .bar-track{flex:1;height:8px;background:#e9ecef;border-radius:4px;position:relative;overflow:visible;}
 .bar-fill{height:100%;border-radius:4px;transition:width .6s ease;}
 .bar-tgt{position:absolute;top:-3px;width:2px;height:14px;background:var(--orange);border-radius:1px;}
-.bar-val{width:54px;text-align:left;font-size:10px;font-weight:600;flex-shrink:0;}
-.bar-miss{font-size:9px;color:var(--red);margin-left:2px;}
+.bar-val{width:54px;text-align:left;font-size:12px;font-weight:600;flex-shrink:0;}
+.bar-miss{font-size:11px;color:var(--red);margin-left:2px;}
 .table-wrap{background:var(--card-bg);border-radius:10px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden;}
 .table-controls{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .filter-btn{padding:4px 12px;border-radius:16px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:11px;font-family:inherit;transition:all .15s;color:var(--text-muted);}
@@ -830,8 +830,8 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
       <div class="sec-title" style="margin:0;">🆕 新保業績儀表板 <span id="nb-month-label" style="color:#4472C4;"></span></div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <span style="font-size:11px;color:var(--text-muted);" id="nb-datasrc">尚無資料</span>
-        <button onclick="openNbUpload()" style="padding:5px 12px;border:1px solid #4472C4;border-radius:6px;background:#DAE8FC;color:#12239E;font-size:11px;font-family:inherit;cursor:pointer;font-weight:600;">📂 上傳新保資料</button>
+        <span style="font-size:13px;color:var(--text-muted);" id="nb-datasrc">尚無資料</span>
+        <button onclick="openNbUpload()" style="padding:5px 12px;border:1px solid #4472C4;border-radius:6px;background:#DAE8FC;color:#12239E;font-size:13px;font-family:inherit;cursor:pointer;font-weight:600;">📂 上傳新保資料</button>
       </div>
     </div>
 
@@ -3230,7 +3230,7 @@ async function parseNbMonth(actFile, plateFiles){
   // 建立業代統計 map
   const agentMap={};
   const getAg=(name,dept)=>{
-    if(!agentMap[name]) agentMap[name]={name,dept,insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
+    if(!agentMap[name]) agentMap[name]={name,dept,plateCnt:0,insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
     return agentMap[name];
   };
   // ORG 對應 map（名稱→部門）
@@ -3309,6 +3309,12 @@ async function parseNbMonth(actFile, plateFiles){
     if(p) platePlateSet.add(p);
   });
 
+  // 依領牌業代累計各人領牌件數（col24 = 業績業代）
+  plateRows.forEach(r=>{
+    const agName = String(r[24]||'').trim();
+    if(agName && agentMap[agName]) agentMap[agName].plateCnt++;
+  });
+
   // 尚未投保車輛（有領牌但無保險紀錄）
   const uninsured = plateRows.filter(r=>{
     let p = String(r[5]||'').replace(/[="]/g,'').replace(/-/g,'').trim().toUpperCase();
@@ -3351,14 +3357,14 @@ async function parseNbMonth(actFile, plateFiles){
   PARSE_DEPT_ORDER.forEach(dept=>{
     const info=ORG[dept];
     if(info?.principal){
-      const a=agentMap[info.principal]||{name:info.principal,dept,insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
+      const a=agentMap[info.principal]||{name:info.principal,dept,plateCnt:0,insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
       a.dept=dept; a.course='所長';
       if(!addedNames.has(a.name)){agents.push(a);addedNames.add(a.name);}
     }
     Object.entries(info?.courses||{}).forEach(([course,names])=>{
       names.forEach(nm=>{
         const n=nm.trim();
-        const a=agentMap[n]||{name:n,dept,insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
+        const a=agentMap[n]||{name:n,dept,plateCnt:0,insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
         a.dept=dept; a.course=course;
         if(!addedNames.has(a.name)){agents.push(a);addedNames.add(a.name);}
       });
@@ -3370,7 +3376,7 @@ async function parseNbMonth(actFile, plateFiles){
   // 財管部：只加黃依潔
   ['黃依潔'].forEach(nm=>{
     if(addedNames.has(nm)) return;
-    const a=agentMap[nm]||{name:nm,dept:'財管部',insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
+    const a=agentMap[nm]||{name:nm,dept:'財管部',plateCnt:0,insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
     a.dept='財管部'; a.course='';
     agents.push(a); addedNames.add(nm);
   });
@@ -3389,8 +3395,10 @@ async function processNbFiles(){
   nbSetProg(5);
 
   try{
-    const annData = getNbAnnualData();
-    const processedMonths=[];
+    // 多年份處理：以 activeYear 追蹤當前正在寫入的年份，年份切換時先存舊年份再切換
+    let activeYear = curYear;
+    let annData = getNbAnnualData();
+    const processedByYear = {}; // { 2025:[1,2,...], 2026:[1,2,...] }
 
     for(let i=0;i<nbActFileList.length;i++){
       document.getElementById('nb-prog-label').textContent=`解析第 ${i+1}/${nbActFileList.length} 個檔案：${nbActFileList[i].name}`;
@@ -3398,9 +3406,18 @@ async function processNbFiles(){
 
       const result = await parseNbMonth(nbActFileList[i], nbPlateFileList);
       if(!result.month) result.month = i+1;
-      if(result.fnYear && result.fnYear!==curYear){ curYear=result.fnYear; updateYearUI(); }
+      const fileYear = result.fnYear || curYear;
 
-      // 存入年度快照
+      // 偵測到年份切換：先把舊年份資料存好，再切換到新年份
+      if(fileYear !== activeYear){
+        saveNbAnnualData(annData);                     // 存舊年份
+        curYear = fileYear;
+        updateYearUI();
+        activeYear = fileYear;
+        annData = getNbAnnualData();                   // 讀新年份的現有快照
+      }
+
+      // 存入當前年份快照
       annData[result.month] = {
         month:        result.month,
         plateCnt:     result.plateCnt,
@@ -3414,15 +3431,21 @@ async function processNbFiles(){
         uninsured:  result.uninsured,
         preInsured: result.preInsured
       };
-      processedMonths.push(result.month);
+      if(!processedByYear[activeYear]) processedByYear[activeYear]=[];
+      processedByYear[activeYear].push(result.month);
 
       // 最後一個月份設為當前顯示
       if(i===nbActFileList.length-1) window.NB_DATA = annData[result.month];
     }
 
-    saveNbAnnualData(annData);
+    saveNbAnnualData(annData);  // 存最後（或唯一）年份
     nbSetProg(100);
-    const monthsStr = curYear+'年 '+processedMonths.sort((a,b)=>a-b).map(m=>m+'月').join('、');
+
+    // 組合多年份摘要訊息
+    const monthsStr = Object.entries(processedByYear)
+      .sort(([a],[b])=>a-b)
+      .map(([yr,ms])=>yr+'年 '+ms.sort((a,b)=>a-b).map(m=>m+'月').join('、'))
+      .join('　');
     nbShowMsg('success','✓ 完成！已解析：'+monthsStr);
 
     // 若新保分頁開啟中，立即更新畫面
@@ -3525,31 +3548,43 @@ function renderNbOverview(){
       const dIns  = dAgents.reduce((s,a)=>s+a.insCnt,0);
       const dBody = dAgents.reduce((s,a)=>s+a.bodyCnt,0);
       const dArb  = dAgents.reduce((s,a)=>s+a.arbCnt,0);
+      const dComp = dAgents.reduce((s,a)=>s+(a.compCnt||0),0);
       const dBodyR = dIns>0?dBody/dIns:0;
       const dArbR  = dIns>0?dArb/dIns:0;
+      const dCompR = dIns>0?dComp/dIns:0;
       const bodyCol = dBodyR>=0.9?'#16a34a':dBodyR>=0.7?'#4472C4':dBodyR>=0.5?'#ca8a04':'#ea580c';
       const arbCol  = dArbR>=0.9?'#16a34a':dArbR>=0.7?'#4472C4':dArbR>=0.5?'#ca8a04':'#ea580c';
+      const compCol = dCompR>=0.3?'#dc2626':dCompR>=0.15?'#ea580c':'#16a34a'; // 單強越低越好，反向顯色
       cardsHtml += `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.05);">
         <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
-          <span style="font-size:13px;font-weight:700;color:#12239E;">${dept}</span>
-          <span style="font-size:11px;color:#94a3b8;">新保 ${dIns} 件</span>
+          <span style="font-size:15px;font-weight:700;color:#12239E;">${dept}</span>
+          <span style="font-size:13px;color:#94a3b8;">新保 ${dIns} 件</span>
         </div>
         <div style="margin-bottom:8px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-            <span style="font-size:11px;color:#64748b;">車體險</span>
-            <span style="font-size:12px;font-weight:700;color:${bodyCol};">${(dBodyR*100).toFixed(0)}%　<span style="font-size:10px;font-weight:400;color:#94a3b8;">${dBody}件</span></span>
+            <span style="font-size:13px;color:#64748b;">車體險</span>
+            <span style="font-size:14px;font-weight:700;color:${bodyCol};">${(dBodyR*100).toFixed(0)}%　<span style="font-size:12px;font-weight:400;color:#94a3b8;">${dBody}件</span></span>
           </div>
           <div style="background:#e9ecef;border-radius:4px;height:10px;overflow:hidden;">
             <div style="width:${Math.min(dBodyR*100,100).toFixed(1)}%;background:${bodyCol};height:100%;border-radius:4px;transition:width .5s;"></div>
           </div>
         </div>
-        <div>
+        <div style="margin-bottom:8px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-            <span style="font-size:11px;color:#64748b;">任意險</span>
-            <span style="font-size:12px;font-weight:700;color:${arbCol};">${(dArbR*100).toFixed(0)}%　<span style="font-size:10px;font-weight:400;color:#94a3b8;">${dArb}件</span></span>
+            <span style="font-size:13px;color:#64748b;">任意險</span>
+            <span style="font-size:14px;font-weight:700;color:${arbCol};">${(dArbR*100).toFixed(0)}%　<span style="font-size:12px;font-weight:400;color:#94a3b8;">${dArb}件</span></span>
           </div>
           <div style="background:#e9ecef;border-radius:4px;height:10px;overflow:hidden;">
             <div style="width:${Math.min(dArbR*100,100).toFixed(1)}%;background:${arbCol};height:100%;border-radius:4px;transition:width .5s;"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:13px;color:#64748b;">單強</span>
+            <span style="font-size:14px;font-weight:700;color:${compCol};">${(dCompR*100).toFixed(0)}%　<span style="font-size:12px;font-weight:400;color:#94a3b8;">${dComp}件</span></span>
+          </div>
+          <div style="background:#e9ecef;border-radius:4px;height:10px;overflow:hidden;">
+            <div style="width:${Math.min(dCompR*100,100).toFixed(1)}%;background:${compCol};height:100%;border-radius:4px;transition:width .5s;"></div>
           </div>
         </div>
       </div>`;
@@ -3564,10 +3599,10 @@ function renderNbOverview(){
     const tbody=document.getElementById('nb-uninsured-tbody');
     tbody.innerHTML=d.uninsured.map((r,i)=>`
       <tr style="background:${i%2?'#fff':'#fef9f0'};">
-        <td style="padding:6px 10px;font-size:12px;font-weight:600;text-align:center;">${r.agent}</td>
-        <td style="padding:6px 10px;font-size:12px;text-align:center;">${r.plate}</td>
-        <td style="padding:6px 10px;font-size:12px;text-align:center;">${r.owner||'—'}</td>
-        <td style="padding:6px 10px;font-size:12px;text-align:center;color:#64748b;">${r.engine||'—'}</td>
+        <td style="padding:6px 10px;font-size:13px;font-weight:600;text-align:center;">${r.agent}</td>
+        <td style="padding:6px 10px;font-size:13px;text-align:center;">${r.plate}</td>
+        <td style="padding:6px 10px;font-size:13px;text-align:center;">${r.owner||'—'}</td>
+        <td style="padding:6px 10px;font-size:13px;text-align:center;color:#64748b;">${r.engine||'—'}</td>
       </tr>`).join('');
   } else {
     uninsuredSec.style.display='none';
@@ -3580,10 +3615,10 @@ function renderNbOverview(){
     const ptbody = document.getElementById('nb-preinsured-tbody');
     ptbody.innerHTML=d.preInsured.map((r,i)=>`
       <tr style="background:${i%2?'#fff':'#f0f7ff'};">
-        <td style="padding:6px 10px;font-size:12px;font-weight:600;text-align:center;">${r.agent}</td>
-        <td style="padding:6px 10px;font-size:12px;text-align:center;">${r.plate}</td>
-        <td style="padding:6px 10px;font-size:12px;text-align:center;">${r.insured||'—'}</td>
-        <td style="padding:6px 10px;font-size:12px;text-align:center;color:#64748b;">${r.engine||'—'}</td>
+        <td style="padding:6px 10px;font-size:13px;font-weight:600;text-align:center;">${r.agent}</td>
+        <td style="padding:6px 10px;font-size:13px;text-align:center;">${r.plate}</td>
+        <td style="padding:6px 10px;font-size:13px;text-align:center;">${r.insured||'—'}</td>
+        <td style="padding:6px 10px;font-size:13px;text-align:center;color:#64748b;">${r.engine||'—'}</td>
       </tr>`).join('');
   } else {
     if(preInsuredSec) preInsuredSec.style.display='none';
@@ -3617,14 +3652,16 @@ function renderNbTable(){
       <th style="padding:8px 8px;text-align:center;min-width:52px;">部門</th>
       <th style="padding:8px 8px;text-align:center;min-width:70px;">課別</th>
       <th style="padding:8px 8px;text-align:center;min-width:56px;">姓名</th>
+      <th style="padding:8px 8px;text-align:center;min-width:52px;">領牌件數</th>
       <th style="padding:8px 8px;text-align:center;min-width:52px;">新保件數</th>
-      <th style="padding:8px 8px;text-align:center;min-width:62px;background:#4a6fa5;color:#fff;">車體險件數</th>
-      <th style="padding:8px 8px;text-align:center;min-width:52px;background:#4a6fa5;color:#fff;">車體險率</th>
-      <th style="padding:8px 8px;text-align:center;min-width:62px;background:#7a6a1a;color:#fff;">任意險件數</th>
-      <th style="padding:8px 8px;text-align:center;min-width:52px;background:#7a6a1a;color:#fff;">任意險率</th>
-      <th style="padding:8px 8px;text-align:center;min-width:52px;background:#5a7a5a;color:#fff;">強制險件數</th>
-      <th style="padding:8px 8px;text-align:center;min-width:76px;background:#C6EFCE;color:#1a5c1a;">任意險保費</th>
-      <th style="padding:8px 8px;text-align:center;min-width:76px;background:#f0fdf4;color:#1a5c1a;">應收保費</th>
+      <th style="padding:8px 8px;text-align:center;min-width:62px;background:#12239E;color:#fff;">車體險件數</th>
+      <th style="padding:8px 8px;text-align:center;min-width:52px;background:#12239E;color:#fff;">車體險率</th>
+      <th style="padding:8px 8px;text-align:center;min-width:62px;background:#2563a8;color:#fff;">任意險件數</th>
+      <th style="padding:8px 8px;text-align:center;min-width:52px;background:#2563a8;color:#fff;">任意險率</th>
+      <th style="padding:8px 8px;text-align:center;min-width:52px;background:#3a7abf;color:#fff;">強制險件數</th>
+      <th style="padding:8px 8px;text-align:center;min-width:52px;background:#3a7abf;color:#fff;">單強投保率</th>
+      <th style="padding:8px 8px;text-align:center;min-width:76px;background:#DAE8FC;color:#12239E;">任意險保費</th>
+      <th style="padding:8px 8px;text-align:center;min-width:76px;background:#EEF4FF;color:#12239E;">應收保費</th>
     </tr>`;
 
   // 依篩選狀態決定顯示哪些部門
@@ -3633,23 +3670,26 @@ function renderNbTable(){
     : [nbCurDept];
   const NB_FINMGR_SHOW = new Set(['黃依潔']);
   let rows='';
-  let grandIns=0,grandBody=0,grandArb=0,grandArbAmt=0,grandPremAmt=0,grandCompCnt=0;
+  let grandIns=0,grandBody=0,grandArb=0,grandArbAmt=0,grandPremAmt=0,grandCompCnt=0,grandPlate=0;
 
-  // 輔助：渲染一個業代列
-  function nbAgentRow(a, deptLabel, bg){
+  // 輔助：渲染一個業代列（deptCell 傳入完整的 <td> 字串，或 '' 表示不渲染部門欄）
+  function nbAgentRow(a, deptCell, bg){
     const bodyR = a.insCnt>0?a.bodyCnt/a.insCnt:0;
     const arbR  = a.insCnt>0?a.arbCnt/a.insCnt:0;
+    const compR = a.insCnt>0?(a.compCnt||0)/a.insCnt:0;
     const P='padding:5px 8px;font-size:12px;text-align:center;';
     return `<tr style="background:${bg};">
-      <td style="${P}color:#64748b;">${deptLabel}</td>
+      ${deptCell}
       <td style="${P}color:#94a3b8;">${a.course||''}</td>
       <td style="${P}font-weight:600;">${a.name}</td>
+      <td style="${P}">${(a.plateCnt||0)||'—'}</td>
       <td style="${P}">${a.insCnt||'—'}</td>
       <td style="${P}background:#eef4ff;">${a.bodyCnt||'—'}</td>
       <td style="${P}background:#eef4ff;">${a.insCnt>0?'<span class="chip chip-'+nbRateChip(bodyR)+'">'+(bodyR*100).toFixed(0)+'%</span>':'—'}</td>
       <td style="${P}background:#fffbeb;">${a.arbCnt||'—'}</td>
       <td style="${P}background:#fffbeb;">${a.insCnt>0?'<span class="chip chip-'+nbRateChip(arbR)+'">'+(arbR*100).toFixed(0)+'%</span>':'—'}</td>
       <td style="${P}background:#f0faf0;">${(a.compCnt||0)||'—'}</td>
+      <td style="${P}background:#f0faf0;">${(a.compCnt||0)>0?'<span class="chip chip-'+nbRateChip(compR)+'">'+(compR*100).toFixed(0)+'%</span>':'—'}</td>
       <td style="${P}background:#f0fdf4;">${a.arb>0?'$'+Math.round(a.arb).toLocaleString():'—'}</td>
       <td style="${P}background:#f0fdf4;">${(a.prem||0)>0?'$'+Math.round(a.prem).toLocaleString():'—'}</td>
     </tr>`;
@@ -3660,83 +3700,135 @@ function renderNbTable(){
     const dAgents = agents.filter(a=>a.dept===dept);
     if(!dAgents.length) return;
 
-    // 所長列
+    // 計算 rowspan：所長 + 所有課的業代
     const principal = dAgents.find(a=>a.course==='所長');
-    if(principal) rows += nbAgentRow(principal, dept, '#fff');
-
-    // 依課分組
     const orgCourses = ORG[dept]?.courses ? Object.keys(ORG[dept].courses) : [];
     const extraCourses = dAgents.filter(a=>a.course&&a.course!=='所長').map(a=>a.course);
     const courseNames = [...new Set([...orgCourses,...extraCourses])].filter(Boolean);
+    const memberCount = dAgents.filter(a=>a.course!=='所長').length;
+    const totalRows = (principal?1:0) + memberCount + courseNames.length; // +課小計列數
+    const deptTd = `<td style="padding:5px 8px;font-size:12px;text-align:center;font-weight:600;color:#475569;vertical-align:middle;border-right:2px solid #e2e8f0;" rowspan="${totalRows}">${dept}</td>`;
 
-    courseNames.forEach(course=>{
-      const cAgents = dAgents.filter(a=>a.course===course);
-      cAgents.forEach((a,ci)=>{ rows += nbAgentRow(a, '', ci%2?'#f8fafc':'#fff'); });
-      // 課小計
-      const cIns=cAgents.reduce((s,a)=>s+a.insCnt,0);
-      const cBody=cAgents.reduce((s,a)=>s+a.bodyCnt,0);
-      const cArb=cAgents.reduce((s,a)=>s+a.arbCnt,0);
-      const cArbAmt=cAgents.reduce((s,a)=>s+(a.arb||0),0);
-      const cBodyR=cIns>0?cBody/cIns:0, cArbR=cIns>0?cArb/cIns:0;
-      rows+=`<tr style="background:#DAE8FC;font-size:12px;font-weight:600;color:#12239E;">
-        <td colspan="3" style="padding:5px 10px;text-align:center;">${course} 小計</td>
-        <td style="padding:5px 8px;text-align:center;">${cIns||'—'}</td>
-        <td style="padding:5px 8px;text-align:center;">${cBody||'—'}</td>
-        <td style="padding:5px 8px;text-align:center;">${cIns>0?(cBodyR*100).toFixed(0)+'%':'—'}</td>
-        <td style="padding:5px 8px;text-align:center;">${cArb||'—'}</td>
-        <td style="padding:5px 8px;text-align:center;">${cIns>0?(cArbR*100).toFixed(0)+'%':'—'}</td>
-        <td style="padding:5px 8px;text-align:center;">${cAgents.reduce((s,a)=>s+(a.compCnt||0),0)||'—'}</td>
-        <td style="padding:5px 8px;text-align:center;">$${Math.round(cArbAmt).toLocaleString()}</td>
-        <td style="padding:5px 8px;text-align:center;">$${Math.round(cAgents.reduce((s,a)=>s+(a.prem||0),0)).toLocaleString()}</td>
-      </tr>`;
-    });
+    // 所長列（含合併儲存格）
+    if(principal){
+      rows += nbAgentRow(principal, deptTd, '#fff');
+      // 後續列不再輸出 dept td
+      let firstMember = true;
+      courseNames.forEach(course=>{
+        const cAgents = dAgents.filter(a=>a.course===course);
+        cAgents.forEach((a,ci)=>{
+          const cell = firstMember ? '' : '';
+          rows += nbAgentRow(a, '', ci%2?'#f8fafc':'#fff');
+          firstMember = false;
+        });
+        // 課小計
+        const cIns=cAgents.reduce((s,a)=>s+a.insCnt,0);
+        const cPlate=cAgents.reduce((s,a)=>s+(a.plateCnt||0),0);
+        const cBody=cAgents.reduce((s,a)=>s+a.bodyCnt,0);
+        const cArb=cAgents.reduce((s,a)=>s+a.arbCnt,0);
+        const cComp=cAgents.reduce((s,a)=>s+(a.compCnt||0),0);
+        const cArbAmt=cAgents.reduce((s,a)=>s+(a.arb||0),0);
+        const cBodyR=cIns>0?cBody/cIns:0, cArbR=cIns>0?cArb/cIns:0, cCompR=cIns>0?cComp/cIns:0;
+        rows+=`<tr style="background:#DAE8FC;font-size:12px;font-weight:600;color:#12239E;">
+          <td colspan="2" style="padding:5px 10px;text-align:center;">${course} 小計</td>
+          <td style="padding:5px 8px;text-align:center;">${cPlate||'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cIns||'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cBody||'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cIns>0?(cBodyR*100).toFixed(0)+'%':'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cArb||'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cIns>0?(cArbR*100).toFixed(0)+'%':'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cComp||'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cIns>0?(cCompR*100).toFixed(0)+'%':'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">$${Math.round(cArbAmt).toLocaleString()}</td>
+          <td style="padding:5px 8px;text-align:center;">$${Math.round(cAgents.reduce((s,a)=>s+(a.prem||0),0)).toLocaleString()}</td>
+        </tr>`;
+      });
+    } else {
+      // 無所長：第一個業代輸出合併欄
+      let isFirst = true;
+      courseNames.forEach(course=>{
+        const cAgents = dAgents.filter(a=>a.course===course);
+        cAgents.forEach((a,ci)=>{
+          rows += nbAgentRow(a, isFirst ? deptTd : '', ci%2?'#f8fafc':'#fff');
+          isFirst = false;
+        });
+        const cIns=cAgents.reduce((s,a)=>s+a.insCnt,0);
+        const cPlate=cAgents.reduce((s,a)=>s+(a.plateCnt||0),0);
+        const cBody=cAgents.reduce((s,a)=>s+a.bodyCnt,0);
+        const cArb=cAgents.reduce((s,a)=>s+a.arbCnt,0);
+        const cComp=cAgents.reduce((s,a)=>s+(a.compCnt||0),0);
+        const cArbAmt=cAgents.reduce((s,a)=>s+(a.arb||0),0);
+        const cBodyR=cIns>0?cBody/cIns:0, cArbR=cIns>0?cArb/cIns:0, cCompR=cIns>0?cComp/cIns:0;
+        rows+=`<tr style="background:#DAE8FC;font-size:12px;font-weight:600;color:#12239E;">
+          <td colspan="2" style="padding:5px 10px;text-align:center;">${course} 小計</td>
+          <td style="padding:5px 8px;text-align:center;">${cPlate||'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cIns||'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cBody||'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cIns>0?(cBodyR*100).toFixed(0)+'%':'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cArb||'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cIns>0?(cArbR*100).toFixed(0)+'%':'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cComp||'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">${cIns>0?(cCompR*100).toFixed(0)+'%':'—'}</td>
+          <td style="padding:5px 8px;text-align:center;">$${Math.round(cArbAmt).toLocaleString()}</td>
+          <td style="padding:5px 8px;text-align:center;">$${Math.round(cAgents.reduce((s,a)=>s+(a.prem||0),0)).toLocaleString()}</td>
+        </tr>`;
+      });
+    }
 
     // 所合計
     const dIns=dAgents.reduce((s,a)=>s+a.insCnt,0);
+    const dPlate=dAgents.reduce((s,a)=>s+(a.plateCnt||0),0);
     const dBody=dAgents.reduce((s,a)=>s+a.bodyCnt,0);
     const dArb=dAgents.reduce((s,a)=>s+a.arbCnt,0);
+    const dComp=dAgents.reduce((s,a)=>s+(a.compCnt||0),0);
     const dArbAmt=dAgents.reduce((s,a)=>s+(a.arb||0),0);
-    const dBodyR=dIns>0?dBody/dIns:0, dArbR=dIns>0?dArb/dIns:0;
+    const dBodyR=dIns>0?dBody/dIns:0, dArbR=dIns>0?dArb/dIns:0, dCompR=dIns>0?dComp/dIns:0;
     rows+=`<tr style="background:#70A0D4;color:#fff;font-weight:700;font-size:12px;">
       <td colspan="3" style="padding:6px 10px;text-align:center;">${dept} 合計</td>
+      <td style="padding:6px 8px;text-align:center;">${dPlate}</td>
       <td style="padding:6px 8px;text-align:center;">${dIns}</td>
       <td style="padding:6px 8px;text-align:center;">${dBody}</td>
       <td style="padding:6px 8px;text-align:center;">${(dBodyR*100).toFixed(0)}%</td>
       <td style="padding:6px 8px;text-align:center;">${dArb}</td>
       <td style="padding:6px 8px;text-align:center;">${(dArbR*100).toFixed(0)}%</td>
-      <td style="padding:6px 8px;text-align:center;">${dAgents.reduce((s,a)=>s+(a.compCnt||0),0)}</td>
+      <td style="padding:6px 8px;text-align:center;">${dComp}</td>
+      <td style="padding:6px 8px;text-align:center;">${(dCompR*100).toFixed(0)}%</td>
       <td style="padding:6px 8px;text-align:center;">$${Math.round(dArbAmt).toLocaleString()}</td>
       <td style="padding:6px 8px;text-align:center;">$${Math.round(dAgents.reduce((s,a)=>s+(a.prem||0),0)).toLocaleString()}</td>
     </tr>`;
     grandIns+=dIns; grandBody+=dBody; grandArb+=dArb; grandArbAmt+=dArbAmt;
     grandPremAmt+=dAgents.reduce((s,a)=>s+(a.prem||0),0);
-    grandCompCnt+=dAgents.reduce((s,a)=>s+(a.compCnt||0),0);
+    grandCompCnt+=dComp; grandPlate+=dPlate;
   });
 
   // 財管部：只顯示黃依潔（全部篩選時才顯示）
   if(nbCurDept==='all'){
     const finAgents = agents.filter(a=>a.dept==='財管部'&&NB_FINMGR_SHOW.has(a.name));
-    finAgents.forEach((a,idx)=>{ rows += nbAgentRow(a, idx===0?'財管部':'', idx%2?'#f8fafc':'#fff'); });
+    const finTd = `<td style="padding:5px 8px;font-size:12px;text-align:center;font-weight:600;color:#475569;vertical-align:middle;border-right:2px solid #e2e8f0;" rowspan="${finAgents.length||1}">財管部</td>`;
+    finAgents.forEach((a,idx)=>{ rows += nbAgentRow(a, idx===0?finTd:'', idx%2?'#f8fafc':'#fff'); });
     const fIns=finAgents.reduce((s,a)=>s+a.insCnt,0);
+    const fPlate=finAgents.reduce((s,a)=>s+(a.plateCnt||0),0);
     const fBody=finAgents.reduce((s,a)=>s+a.bodyCnt,0);
     const fArb=finAgents.reduce((s,a)=>s+a.arbCnt,0);
     const fArbAmt=finAgents.reduce((s,a)=>s+(a.arb||0),0);
     const fPremAmt=finAgents.reduce((s,a)=>s+(a.prem||0),0);
     const fCompCnt=finAgents.reduce((s,a)=>s+(a.compCnt||0),0);
-    grandIns+=fIns; grandBody+=fBody; grandArb+=fArb; grandArbAmt+=fArbAmt; grandPremAmt+=fPremAmt; grandCompCnt+=fCompCnt;
+    grandIns+=fIns; grandBody+=fBody; grandArb+=fArb; grandArbAmt+=fArbAmt; grandPremAmt+=fPremAmt; grandCompCnt+=fCompCnt; grandPlate+=fPlate;
   }
 
   // 總計列
-  const gBodyR=grandIns>0?grandBody/grandIns:0, gArbR=grandIns>0?grandArb/grandIns:0;
+  const gBodyR=grandIns>0?grandBody/grandIns:0, gArbR=grandIns>0?grandArb/grandIns:0, gCompR=grandIns>0?grandCompCnt/grandIns:0;
   const gLabel = nbCurDept==='all' ? '全部 總計' : nbCurDept+' 總計';
   rows+=`<tr style="background:#1e293b;color:#fff;font-weight:700;font-size:13px;">
     <td colspan="3" style="padding:8px 10px;text-align:center;">${gLabel}</td>
+    <td style="padding:8px 8px;text-align:center;">${grandPlate}</td>
     <td style="padding:8px 8px;text-align:center;">${grandIns}</td>
     <td style="padding:8px 8px;text-align:center;">${grandBody}</td>
     <td style="padding:8px 8px;text-align:center;">${(gBodyR*100).toFixed(0)}%</td>
     <td style="padding:8px 8px;text-align:center;">${grandArb}</td>
     <td style="padding:8px 8px;text-align:center;">${(gArbR*100).toFixed(0)}%</td>
     <td style="padding:8px 8px;text-align:center;">${grandCompCnt}</td>
+    <td style="padding:8px 8px;text-align:center;">${(gCompR*100).toFixed(0)}%</td>
     <td style="padding:8px 8px;text-align:center;">$${Math.round(grandArbAmt).toLocaleString()}</td>
     <td style="padding:8px 8px;text-align:center;">$${Math.round(grandPremAmt).toLocaleString()}</td>
   </tr>`;
@@ -3839,12 +3931,14 @@ function renderNbTrendChart(data, months){
     const eff=(d.effPlateCnt!=null?d.effPlateCnt:d.plateCnt)||0;
     const x=padL+i/(allM.length-1)*cW;
     if(eff>0){
-      const r=d.insCnt/eff; rawVals.push(r);
+      const r=d.insCnt/eff;
+      if(r>0) rawVals.push(r);  // 0% 異常值不納入 Y 軸範圍計算
       rawPts.push({type:'ins',x,r,v:(r*100).toFixed(0),m});
     }
     if(d.insCnt>0){
       const br=d.bodyCnt/d.insCnt, ar=d.arbCnt/d.insCnt;
-      rawVals.push(br,ar);
+      if(br>0) rawVals.push(br);  // 同上
+      if(ar>0) rawVals.push(ar);
       rawPts.push({type:'body',x,r:br,v:(br*100).toFixed(0),m});
       rawPts.push({type:'arb',x,r:ar,v:(ar*100).toFixed(0),m});
     }
@@ -3910,7 +4004,7 @@ function renderNbDeptAnnual(data, months){
   if(!el) return;
   const THREE=['中壢所','八德所','桃園所'];
   const dTot={};
-  THREE.forEach(d=>dTot[d]={ins:0,body:0,arb:0,prem:0});
+  THREE.forEach(d=>dTot[d]={ins:0,body:0,arb:0,comp:0,prem:0});
   months.forEach(m=>{
     const agents=(data[m].agents)||[];
     THREE.forEach(dept=>{
@@ -3918,6 +4012,7 @@ function renderNbDeptAnnual(data, months){
       dTot[dept].ins  += da.reduce((s,a)=>s+a.insCnt,0);
       dTot[dept].body += da.reduce((s,a)=>s+a.bodyCnt,0);
       dTot[dept].arb  += da.reduce((s,a)=>s+a.arbCnt,0);
+      dTot[dept].comp += da.reduce((s,a)=>s+(a.compCnt||0),0);
       dTot[dept].prem += da.reduce((s,a)=>s+(a.prem||0),0);
     });
   });
@@ -3926,8 +4021,10 @@ function renderNbDeptAnnual(data, months){
     const dt=dTot[dept];
     const bodyR=dt.ins>0?dt.body/dt.ins:0;
     const arbR =dt.ins>0?dt.arb/dt.ins:0;
+    const compR=dt.ins>0?dt.comp/dt.ins:0;
     const bodyCol=bodyR>=0.8?'#16a34a':bodyR>=0.6?'#ca8a04':'#ea580c';
     const arbCol =arbR>=0.8?'#16a34a':arbR>=0.6?'#ca8a04':'#ea580c';
+    const compCol=compR>=0.3?'#dc2626':compR>=0.15?'#ea580c':'#16a34a';
     html+=`<div style="margin-bottom:12px;">
       <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:5px;">${dept}　<span style="font-weight:400;color:#94a3b8;">新保${dt.ins}件</span></div>
       <div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:6px;margin-bottom:4px;">
@@ -3937,12 +4034,19 @@ function renderNbDeptAnnual(data, months){
         </div>
         <span style="font-size:10px;font-weight:700;color:${bodyCol};white-space:nowrap;">${(bodyR*100).toFixed(0)}%　<span style="font-weight:400;color:#94a3b8;">${dt.body}件</span></span>
       </div>
-      <div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:6px;">
+      <div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:6px;margin-bottom:4px;">
         <span style="font-size:10px;color:#64748b;">任意險</span>
         <div style="background:#e9ecef;border-radius:4px;height:10px;overflow:hidden;min-width:0;">
           <div style="width:${Math.min(arbR*100,100).toFixed(1)}%;background:${arbCol};height:100%;border-radius:4px;transition:width .5s;"></div>
         </div>
         <span style="font-size:10px;font-weight:700;color:${arbCol};white-space:nowrap;">${(arbR*100).toFixed(0)}%　<span style="font-weight:400;color:#94a3b8;">${dt.arb}件</span></span>
+      </div>
+      <div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:6px;">
+        <span style="font-size:10px;color:#64748b;">單強</span>
+        <div style="background:#e9ecef;border-radius:4px;height:10px;overflow:hidden;min-width:0;">
+          <div style="width:${Math.min(compR*100,100).toFixed(1)}%;background:${compCol};height:100%;border-radius:4px;transition:width .5s;"></div>
+        </div>
+        <span style="font-size:10px;font-weight:700;color:${compCol};white-space:nowrap;">${(compR*100).toFixed(0)}%　<span style="font-weight:400;color:#94a3b8;">${dt.comp}件</span></span>
       </div>
     </div>`;
   });
