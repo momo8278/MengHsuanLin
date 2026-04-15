@@ -353,6 +353,18 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
 
   <hr class="sidebar-divider">
 
+  <!-- 新保業績 -->
+  <div class="sidebar-section">新保業績</div>
+  <div class="sidebar-item" id="nav-nb" onclick="navToTab('nb-overview','nav-nb')">
+    <span class="si-icon">🆕</span> 新保儀表板
+  </div>
+  <div class="sidebar-sub">
+    <div class="sidebar-item" id="nav-nb-kpi" onclick="navToTab('nb-overview','nav-nb-kpi')"><span class="si-icon">📊</span> 投保總覽</div>
+    <div class="sidebar-item" id="nav-nb-table" onclick="navToTab('nb-table','nav-nb-table')"><span class="si-icon">📋</span> 業代明細</div>
+  </div>
+
+  <hr class="sidebar-divider">
+
   <!-- 年度總覽 -->
   <div class="sidebar-section">年度</div>
   <div class="sidebar-item" id="nav-annual" onclick="navToTab('annual','nav-annual')">
@@ -817,9 +829,159 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
       </div>
     </div>
   </div>
+  <!-- ════════ 新保業績：投保總覽 ════════ -->
+  <div id="sec-nb-overview" style="display:none;padding:20px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+      <div class="sec-title" style="margin:0;">🆕 新保業績儀表板 <span id="nb-month-label" style="color:#4472C4;"></span></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:11px;color:var(--text-muted);" id="nb-datasrc">尚無資料</span>
+        <button onclick="openNbUpload()" style="padding:5px 12px;border:1px solid #4472C4;border-radius:6px;background:#DAE8FC;color:#12239E;font-size:11px;font-family:inherit;cursor:pointer;font-weight:600;">📂 上傳新保資料</button>
+      </div>
+    </div>
+
+    <!-- KPI 卡片：一列六格 -->
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:16px;">
+      <div class="kpi-card" style="--accent:#4472C4">
+        <div class="kpi-label">領牌台數</div>
+        <div class="kpi-val" id="nb-plate-cnt" style="color:var(--blue-1)">—</div>
+        <div class="kpi-sub">本月領牌總台數</div>
+      </div>
+      <div class="kpi-card" style="--accent:#12239E">
+        <div class="kpi-label">新保件數</div>
+        <div class="kpi-val" id="nb-ins-cnt" style="color:var(--blue-dark)">—</div>
+        <div class="kpi-sub">本月新保投保件數</div>
+      </div>
+      <div class="kpi-card" style="--accent:#16a34a">
+        <div class="kpi-label">整體投保率</div>
+        <div class="kpi-val" id="nb-ins-rate" style="color:var(--green)">—</div>
+        <div class="kpi-sub">新保件數 ÷ 領牌台數（排除租賃）</div>
+      </div>
+      <div class="kpi-card" style="--accent:#4472C4">
+        <div class="kpi-label">車體險投保率</div>
+        <div class="kpi-val" id="nb-body-rate" style="color:#4472C4">—</div>
+        <div class="kpi-sub">有車體險 ÷ 新保件數</div>
+      </div>
+      <div class="kpi-card" style="--accent:#ca8a04">
+        <div class="kpi-label">任意險投保率</div>
+        <div class="kpi-val" id="nb-arb-rate" style="color:var(--yellow)">—</div>
+        <div class="kpi-sub">有任意險 ÷ 新保件數</div>
+      </div>
+      <div class="kpi-card" style="--accent:#185FA5">
+        <div class="kpi-label">平均保費</div>
+        <div class="kpi-val" id="nb-avg-prem" style="color:#185FA5;font-size:20px;">—</div>
+        <div class="kpi-sub">總保費 ÷ 總投保件數</div>
+      </div>
+    </div>
+
+    <!-- 各所投保率橫條 -->
+    <div id="nb-dept-bars" style="margin-bottom:16px;"></div>
+
+    <!-- 尚未投保車輛清單 -->
+    <div id="nb-uninsured-sec" style="display:none;margin-bottom:16px;">
+      <div class="sec-title">⚠️ 尚未投保車輛清單（已領牌但無保險記錄）</div>
+      <div class="table-wrap"><div class="scroll-wrap" style="max-height:300px;">
+        <table style="width:100%;">
+          <thead><tr style="background:#4a5568;color:#fff;font-size:12px;">
+            <th style="padding:8px 10px;text-align:center;min-width:80px;">業績業代</th>
+            <th style="padding:8px 10px;text-align:center;min-width:100px;">牌照號碼</th>
+            <th style="padding:8px 10px;text-align:center;min-width:100px;">領牌人</th>
+            <th style="padding:8px 10px;text-align:center;min-width:140px;">引擎號碼</th>
+          </tr></thead>
+          <tbody id="nb-uninsured-tbody"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <!-- 已投保尚未領牌清單 -->
+    <div id="nb-preinsured-sec" style="display:none;margin-bottom:16px;">
+      <div class="sec-title" style="color:#185FA5;">📋 已投保尚未領牌清單（有保險記錄但無領牌記錄）</div>
+      <div class="table-wrap"><div class="scroll-wrap" style="max-height:300px;">
+        <table style="width:100%;">
+          <thead><tr style="background:#4472C4;color:#fff;font-size:12px;">
+            <th style="padding:8px 10px;text-align:center;min-width:80px;">業績業代</th>
+            <th style="padding:8px 10px;text-align:center;min-width:100px;">牌照號碼</th>
+            <th style="padding:8px 10px;text-align:center;min-width:100px;">被保險人</th>
+            <th style="padding:8px 10px;text-align:center;min-width:140px;">引擎號碼</th>
+          </tr></thead>
+          <tbody id="nb-preinsured-tbody"></tbody>
+        </table>
+      </div></div>
+    </div>
+
+    <div id="nb-empty-hint" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+      <div style="font-size:48px;margin-bottom:12px;">🆕</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px;">尚無新保資料</div>
+      <div style="font-size:13px;">請上傳業績明細表與領牌明細資料，或從 SharePoint 載入</div>
+    </div>
+  </div>
+
+  <!-- ════════ 新保業績：業代明細 ════════ -->
+  <div id="sec-nb-table" style="display:none;padding:20px 24px;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;">
+      <div class="sec-title" style="margin:0;">業代新保業績明細</div>
+      <div style="margin-left:8px;display:flex;gap:6px;flex-wrap:wrap;" id="nb-dept-filters">
+        <button class="filter-btn active" data-nbf="all"   onclick="nbFilterDept('all')">全部</button>
+        <button class="filter-btn"        data-nbf="中壢所" onclick="nbFilterDept('中壢所')">中壢所</button>
+        <button class="filter-btn"        data-nbf="八德所" onclick="nbFilterDept('八德所')">八德所</button>
+        <button class="filter-btn"        data-nbf="桃園所" onclick="nbFilterDept('桃園所')">桃園所</button>
+      </div>
+    </div>
+    <div class="table-wrap" style="border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.08);">
+      <div class="scroll-wrap" style="max-height:70vh;">
+        <table style="width:100%;min-width:700px;">
+          <thead id="nb-tbl-head"></thead>
+          <tbody id="nb-tbl-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="nb-table-empty" style="text-align:center;padding:60px 20px;color:var(--text-muted);">
+      <div style="font-size:13px;">請先上傳新保資料</div>
+    </div>
+  </div>
+
   <div class="footer" style="padding:16px 24px;">銘勁汽車 MG 營業部　保險業績儀表板　2026.03　數據即時同步至雲端</div>
 </div>
 </div><!-- /main-wrap -->
+
+<!-- 新保資料上傳 Modal -->
+<div class="upload-overlay" id="nb-upload-overlay" onclick="if(this===event.target)closeNbUpload()">
+  <div class="upload-modal">
+    <button class="upload-close" onclick="closeNbUpload()">×</button>
+    <h2>🆕 上傳新保資料</h2>
+    <p>請選取業績明細表（可多月）與領牌明細資料，系統自動解析新保投保率。</p>
+    <div class="file-zone" id="nb-zone-act" ondragover="dzDrag(event,'nb-zone-act')" ondragleave="dzLeave('nb-zone-act')" ondrop="nbDzDropAct(event)">
+      <label><span class="fz-icon">📊</span>
+        <div class="fz-info">
+          <div class="fz-title">新保業績明細表 YYYYMM.xlsx　<span style="color:#185FA5;font-size:10px;">（可多選）</span></div>
+          <div class="fz-hint">系統自動篩選新續保＝「新保」的記錄</div>
+          <div class="fz-status" id="nb-status-act" style="display:none">✓ 已選取</div>
+        </div>
+        <input type="file" id="nb-inp-act" accept=".xlsx,.xls" multiple onchange="nbActSelected()">
+      </label>
+    </div>
+    <div id="nb-file-list" style="display:none;margin:-8px 0 10px;padding:8px 12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);max-height:80px;overflow-y:auto;font-size:11px;"></div>
+    <div class="file-zone" id="nb-zone-plate" ondragover="dzDrag(event,'nb-zone-plate')" ondragleave="dzLeave('nb-zone-plate')" ondrop="nbDzDropPlate(event)">
+      <label><span class="fz-icon">🚗</span>
+        <div class="fz-info">
+          <div class="fz-title">領牌明細資料 YYYYMM.xlsx　<span style="color:#185FA5;font-size:10px;">（可多選）</span></div>
+          <div class="fz-hint">用於計算領牌台數與整體投保率</div>
+          <div class="fz-status" id="nb-status-plate" style="display:none">✓ 已選取</div>
+        </div>
+        <input type="file" id="nb-inp-plate" accept=".xlsx,.xls" multiple onchange="nbPlateSelected()">
+      </label>
+    </div>
+    <div id="nb-plate-list" style="display:none;margin:-8px 0 10px;padding:8px 12px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);max-height:80px;overflow-y:auto;font-size:11px;"></div>
+    <div class="upload-progress" id="nb-upload-progress" style="display:none">
+      <div class="prog-label" id="nb-prog-label">解析中，請稍候…</div>
+      <div class="prog-bar"><div class="prog-fill" id="nb-prog-fill" style="width:0%"></div></div>
+    </div>
+    <div class="upload-msg" id="nb-upload-msg"></div>
+    <div class="upload-actions">
+      <button class="btn-cancel" onclick="closeNbUpload()">取消</button>
+      <button class="btn-process" id="nb-btn-process" onclick="processNbFiles()" disabled>開始解析並匯入</button>
+    </div>
+  </div>
+</div>
 
 <script>
 let curYear = 2026;
@@ -1317,7 +1479,8 @@ function showSection(tab,btn){
   const charts=document.getElementById('sec-charts'),table=document.getElementById('sec-table');
   const annual=document.getElementById('sec-annual'),funnel=document.getElementById('sec-funnel');
   const analysis=document.getElementById('sec-analysis');
-  const allSecs=[kpi,kpi2,prog,deptProg,charts,table,annual,funnel,analysis];
+  const nbOverview=document.getElementById('sec-nb-overview'),nbTable=document.getElementById('sec-nb-table');
+  const allSecs=[kpi,kpi2,prog,deptProg,charts,table,annual,funnel,analysis,nbOverview,nbTable];
   allSecs.forEach(s=>{if(s)s.style.display='none';});
   if(tab==='all'){kpi.style.display='';kpi2.style.display='';prog.style.display='';deptProg.style.display='';}
   else if(tab==='charts'){charts.style.display='';}
@@ -1325,6 +1488,8 @@ function showSection(tab,btn){
   else if(tab==='annual'){annual.style.display='';renderAnnual();}
   else if(tab==='funnel'){funnel.style.display='';renderFunnel();}
   else if(tab==='analysis'){analysis.style.display='';renderAnalysis();}
+  else if(tab==='nb-overview'){nbOverview.style.display='';renderNbOverview();}
+  else if(tab==='nb-table'){nbTable.style.display='';renderNbTable();}
 }
 
 window.renderFromCloud=function(snap){
@@ -1785,6 +1950,9 @@ function switchMonth(m){
     // 若年度總覽正在顯示，立即重繪
     const annualSec=document.getElementById('sec-annual');
     if(annualSec&&annualSec.style.display!=='none') renderAnnual();
+
+    // 同步新保資料月份
+    if(typeof nbSwitchMonth==='function') nbSwitchMonth(m);
 
     // 更新 header
     const hdr=document.querySelector('.header-left p');
@@ -2893,6 +3061,682 @@ function buildFunnelData(month,tgt3,actData,tgtMap,idxType,idxPlate){
 
 </script>
 
+<script>
+// ══════════════════════════════════════════════
+// 新保業績模組
+// ══════════════════════════════════════════════
+
+// 全域新保資料
+window.NB_DATA = null;      // 目前顯示月份的解析結果
+let nbActFileList = [];     // 業績明細檔清單
+let nbPlateFileList = [];   // 領牌明細檔清單
+const NB_ANN_KEY_PREFIX = 'mingjin_nb_annual_';
+function getNbAnnKey(){ return NB_ANN_KEY_PREFIX + curYear; }
+
+// ── 上傳 Modal 開關 ──
+function openNbUpload(){
+  document.getElementById('nb-upload-overlay').classList.add('active');
+  document.getElementById('nb-upload-msg').style.display='none';
+  document.getElementById('nb-upload-progress').style.display='none';
+}
+function closeNbUpload(){
+  document.getElementById('nb-upload-overlay').classList.remove('active');
+}
+
+// ── 檔案選取 ──
+function nbActSelected(){
+  const inp=document.getElementById('nb-inp-act');
+  nbActFileList=[...inp.files].sort((a,b)=>a.name.localeCompare(b.name));
+  const st=document.getElementById('nb-status-act');
+  st.style.display='block'; st.textContent='✓ 已選取 '+nbActFileList.length+' 個檔案';
+  const listEl=document.getElementById('nb-file-list');
+  listEl.style.display='block';
+  listEl.innerHTML=nbActFileList.map(f=>'<div>📄 '+f.name+'</div>').join('');
+  document.getElementById('nb-btn-process').disabled=!(nbActFileList.length&&nbPlateFileList.length);
+}
+function nbPlateSelected(){
+  const inp=document.getElementById('nb-inp-plate');
+  nbPlateFileList=[...inp.files].sort((a,b)=>a.name.localeCompare(b.name));
+  const st=document.getElementById('nb-status-plate');
+  st.style.display='block'; st.textContent='✓ 已選取 '+nbPlateFileList.length+' 個檔案';
+  const listEl=document.getElementById('nb-plate-list');
+  listEl.style.display='block';
+  listEl.innerHTML=nbPlateFileList.map(f=>'<div>🚗 '+f.name+'</div>').join('');
+  document.getElementById('nb-btn-process').disabled=!(nbActFileList.length&&nbPlateFileList.length);
+}
+function nbDzDropAct(e){
+  e.preventDefault(); document.getElementById('nb-zone-act').classList.remove('drag-over');
+  nbActFileList=[...e.dataTransfer.files].filter(f=>/\.xlsx?$/i.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name));
+  if(nbActFileList.length){
+    document.getElementById('nb-status-act').style.display='block';
+    document.getElementById('nb-status-act').textContent='✓ 已選取 '+nbActFileList.length+' 個檔案';
+    document.getElementById('nb-file-list').style.display='block';
+    document.getElementById('nb-file-list').innerHTML=nbActFileList.map(f=>'<div>📄 '+f.name+'</div>').join('');
+  }
+  document.getElementById('nb-btn-process').disabled=!(nbActFileList.length&&nbPlateFileList.length);
+}
+function nbDzDropPlate(e){
+  e.preventDefault(); document.getElementById('nb-zone-plate').classList.remove('drag-over');
+  nbPlateFileList=[...e.dataTransfer.files].filter(f=>/\.xlsx?$/i.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name));
+  if(nbPlateFileList.length){
+    document.getElementById('nb-status-plate').style.display='block';
+    document.getElementById('nb-status-plate').textContent='✓ 已選取 '+nbPlateFileList.length+' 個檔案';
+    document.getElementById('nb-plate-list').style.display='block';
+    document.getElementById('nb-plate-list').innerHTML=nbPlateFileList.map(f=>'<div>🚗 '+f.name+'</div>').join('');
+  }
+  document.getElementById('nb-btn-process').disabled=!(nbActFileList.length&&nbPlateFileList.length);
+}
+
+// ── 解析單月新保資料 ──
+// 回傳 { month, plateCnt, insCnt, bodyCnt, arbCnt, agents, uninsured }
+async function parseNbMonth(actFile, plateFiles){
+  // 1. 解析業績明細（篩選新保）
+  const wbAct = await new Promise((res,rej)=>{
+    const r=new FileReader(); r.onload=e=>res(XLSX.read(e.target.result,{type:'array'})); r.onerror=rej; r.readAsArrayBuffer(actFile);
+  });
+  const actSN = wbAct.SheetNames.find(n=>n.includes('保險業績明細')||n.includes('明細'))||wbAct.SheetNames[0];
+  const rawAct = XLSX.utils.sheet_to_json(wbAct.Sheets[actSN],{header:1,defval:''});
+  // 找 header 列
+  let actHdrIdx=19;
+  for(let i=0;i<Math.min(30,rawAct.length);i++){
+    const rs=rawAct[i].join('');
+    if(rs.includes('銷售人員')&&rs.includes('牌照號碼')){ actHdrIdx=i+1; break; }
+  }
+  // 欄位 index（依業績明細表結構）
+  const iDept=0,iName=2,iType=4,iPlate=8,iCode=9;
+  const iBodyA=12,iBodyB=13,iBodyC=14,iBodyD=15,iBodyE=16; // 甲乙丙丙限額其他
+  const iArb=36;
+
+  // 從檔名解析月份
+  const fnMatch = actFile.name.match(/(\d{6})/);
+  let month = fnMatch ? parseInt(fnMatch[0].slice(4)) : null;
+  const fnYear = fnMatch ? parseInt(fnMatch[0].slice(0,4)) : curYear;
+
+  // 篩選新保資料
+  const actRows = rawAct.slice(actHdrIdx).filter(row=>{
+    const n=String(row[iName]||'').trim();
+    if(!n||n==='銷售人員'||n.includes('合計')||n.includes('小計')||n.includes('總計')) return false;
+    return String(row[iType]||'').trim()==='新保';
+  });
+
+  // 建立業代統計 map
+  const agentMap={};
+  const getAg=(name,dept)=>{
+    if(!agentMap[name]) agentMap[name]={name,dept,insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
+    return agentMap[name];
+  };
+  // ORG 對應 map（名稱→部門）
+  const nameToOrgMap={};
+  Object.entries(ORG).forEach(([d,info])=>{
+    if(info.principal) nameToOrgMap[info.principal]=d;
+    Object.entries(info.courses||{}).forEach(([c,names])=>names.forEach(n=>{ nameToOrgMap[n.trim()]=d; }));
+  });
+
+  // 已投保車牌 set（用於比對領牌未投保）
+  const insuredPlates = new Set();
+
+  actRows.forEach(row=>{
+    const name = String(row[iName]||'').trim();
+    const dept = nameToOrgMap[name] || String(row[iDept]||'').trim();
+    const ag = getAg(name, dept);
+    const plate = String(row[iPlate]||'').replace(/[="]/g,'').replace(/-/g,'').trim();
+    if(plate) insuredPlates.add(plate.toUpperCase());
+    ag.insCnt++;
+    // 車體險：甲乙丙丙限額其他 任一 > 0
+    const bodySum = (parseFloat(row[iBodyA])||0)+(parseFloat(row[iBodyB])||0)+(parseFloat(row[iBodyC])||0)+(parseFloat(row[iBodyD])||0)+(parseFloat(row[iBodyE])||0);
+    if(bodySum>0) ag.bodyCnt++;
+    // 任意險
+    const arb = parseFloat(row[iArb])||0;
+    if(arb>0){ ag.arbCnt++; ag.arb+=arb; }
+    // 強制險件數：任意險合計=0 表示只投強制險
+    else { ag.compCnt++; }
+    // 應收保費（col37）
+    ag.prem += parseFloat(row[37])||0;
+  });
+
+  // 2. 解析領牌明細：只取檔名月份與業績檔相同的領牌檔
+  // 業績檔月份已解析為 month（如 4），年份為 fnYear（如 2026）
+  // 領牌檔命名如 202604領牌明細資料.xlsx，取 YYYYMM 比對
+  const actYYYYMM = fnYear * 100 + (month||0); // e.g. 202604
+  // 篩選對應月份的領牌檔（檔名含相同 YYYYMM）
+  const matchedPlateFiles = plateFiles.filter(pf=>{
+    const pm = pf.name.match(/(\d{6})/);
+    return pm && parseInt(pm[1]) === actYYYYMM;
+  });
+  // 若有對應月份的領牌檔就只用那些；否則 fallback 使用全部（容錯）
+  const targetPlateFiles = matchedPlateFiles.length > 0 ? matchedPlateFiles : plateFiles;
+
+  let plateRows=[];
+  for(const pf of targetPlateFiles){
+    const wbP = await new Promise((res,rej)=>{
+      const r=new FileReader(); r.onload=e=>res(XLSX.read(e.target.result,{type:'array'})); r.onerror=rej; r.readAsArrayBuffer(pf);
+    });
+    const pSN = wbP.SheetNames[0];
+    const rawP = XLSX.utils.sheet_to_json(wbP.Sheets[pSN],{header:1,defval:''});
+    // 找 header：含「牌照號碼」的列
+    let pHdrIdx=2;
+    for(let i=0;i<Math.min(10,rawP.length);i++){
+      const rs=rawP[i].join('');
+      if(rs.includes('牌照號碼')){ pHdrIdx=i+1; break; }
+    }
+    // col index：公司(0) 區域(1) 據點(2) 組別(3) 領牌日(4) 牌照號碼(5) 業績業代(24) 細車型(11)
+    const pRows = rawP.slice(pHdrIdx).filter(r=>r[5]&&String(r[5]).trim());
+    plateRows = plateRows.concat(pRows);
+  }
+
+  // 判斷租賃車：領牌人（col17）含「租賃」「租車」「交通」
+  const RENT_KEYWORDS = ['租賃','租車','交通'];
+  const isRental = r => {
+    const owner = String(r[17]||'').trim();
+    return RENT_KEYWORDS.some(k => owner.includes(k));
+  };
+  const plateCnt = plateRows.length;                          // 總領牌台數（含租賃）
+  const rentCnt  = plateRows.filter(isRental).length;        // 租賃車台數
+  const effPlateCnt = plateCnt - rentCnt;                    // 有效領牌台數（排除租賃）
+
+  // 已領牌車牌 set（用於比對已投保但尚未領牌）
+  const platePlateSet = new Set();
+  plateRows.forEach(r=>{
+    let p = String(r[5]||'').replace(/[="]/g,'').replace(/-/g,'').trim().toUpperCase();
+    if(p) platePlateSet.add(p);
+  });
+
+  // 尚未投保車輛（有領牌但無保險紀錄）
+  const uninsured = plateRows.filter(r=>{
+    let p = String(r[5]||'').replace(/[="]/g,'').replace(/-/g,'').trim().toUpperCase();
+    return !insuredPlates.has(p);
+  }).map(r=>({
+    plate:  String(r[5]||'').replace(/[="]/g,'').trim(),
+    agent:  String(r[24]||'').trim(),
+    owner:  String(r[17]||'').trim(),   // 領牌人（col17）
+    engine: String(r[8]||'').trim()     // 引擎號碼（col8）
+  }));
+
+  // 已投保但尚未領牌（有保險紀錄但無領牌記錄）
+  // 從 actRows 中找出車牌不在 platePlateSet 的新保記錄
+  const preInsured = actRows.filter(row=>{
+    let p = String(row[iPlate]||'').replace(/[="]/g,'').replace(/-/g,'').trim().toUpperCase();
+    return p && !platePlateSet.has(p);
+  }).map(row=>({
+    plate:   String(row[iPlate]||'').replace(/[="]/g,'').trim(),
+    agent:   String(row[iName]||'').trim(),
+    insured: String(row[7]||'').trim(),    // 被保險人（col7）
+    engine:  String(row[46]||'').trim()    // 引擎#（col46）
+  }));
+
+  // 整體統計：只計三所 + 黃依潔（財管部公司車），排除營業部/廠端等
+  const NB_VALID_DEPTS = new Set(['中壢所','八德所','桃園所']);
+  const NB_FINMGR_INCLUDE = new Set(['黃依潔']);
+  const validAgents = Object.values(agentMap).filter(a=>{
+    const dept = nameToOrgMap[a.name] || a.dept;
+    return NB_VALID_DEPTS.has(dept) || NB_FINMGR_INCLUDE.has(a.name);
+  });
+  const insCnt = validAgents.reduce((s,a)=>s+a.insCnt,0);
+  const bodyCnt = validAgents.reduce((s,a)=>s+a.bodyCnt,0);
+  const arbCnt = validAgents.reduce((s,a)=>s+a.arbCnt,0);
+  const totalPrem = validAgents.reduce((s,a)=>s+(a.prem||0),0);
+
+  // 整理業代清單：三所全員 + 財管部僅黃依潔（公司車領牌）
+  const PARSE_DEPT_ORDER=['中壢所','八德所','桃園所'];
+  const agents=[];
+  const addedNames=new Set();
+  PARSE_DEPT_ORDER.forEach(dept=>{
+    const info=ORG[dept];
+    if(info?.principal){
+      const a=agentMap[info.principal]||{name:info.principal,dept,insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
+      a.dept=dept; a.course='所長';
+      if(!addedNames.has(a.name)){agents.push(a);addedNames.add(a.name);}
+    }
+    Object.entries(info?.courses||{}).forEach(([course,names])=>{
+      names.forEach(nm=>{
+        const n=nm.trim();
+        const a=agentMap[n]||{name:n,dept,insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
+        a.dept=dept; a.course=course;
+        if(!addedNames.has(a.name)){agents.push(a);addedNames.add(a.name);}
+      });
+    });
+    Object.values(agentMap).filter(a=>a.dept===dept&&!addedNames.has(a.name)).forEach(a=>{
+      agents.push(a); addedNames.add(a.name);
+    });
+  });
+  // 財管部：只加黃依潔
+  ['黃依潔'].forEach(nm=>{
+    if(addedNames.has(nm)) return;
+    const a=agentMap[nm]||{name:nm,dept:'財管部',insCnt:0,bodyCnt:0,arbCnt:0,compCnt:0,arb:0,prem:0};
+    a.dept='財管部'; a.course='';
+    agents.push(a); addedNames.add(nm);
+  });
+
+  return {month, fnYear, plateCnt, rentCnt, effPlateCnt, insCnt, bodyCnt, arbCnt, totalPrem, agents, uninsured, preInsured};
+}
+
+// ── 主解析流程 ──
+async function processNbFiles(){
+  if(!nbActFileList.length||!nbPlateFileList.length){
+    nbShowMsg('error','請先選取業績明細表與領牌明細資料'); return;
+  }
+  document.getElementById('nb-btn-process').disabled=true;
+  document.getElementById('nb-upload-progress').style.display='block';
+  document.getElementById('nb-upload-msg').style.display='none';
+  nbSetProg(5);
+
+  try{
+    const annData = getNbAnnualData();
+    const processedMonths=[];
+
+    for(let i=0;i<nbActFileList.length;i++){
+      document.getElementById('nb-prog-label').textContent=`解析第 ${i+1}/${nbActFileList.length} 個檔案：${nbActFileList[i].name}`;
+      nbSetProg(Math.round((i/nbActFileList.length)*80)+10);
+
+      const result = await parseNbMonth(nbActFileList[i], nbPlateFileList);
+      if(!result.month) result.month = i+1;
+      if(result.fnYear && result.fnYear!==curYear){ curYear=result.fnYear; updateYearUI(); }
+
+      // 存入年度快照
+      annData[result.month] = {
+        month:        result.month,
+        plateCnt:     result.plateCnt,
+        rentCnt:      result.rentCnt,
+        effPlateCnt:  result.effPlateCnt,
+        insCnt:       result.insCnt,
+        bodyCnt:    result.bodyCnt,
+        arbCnt:     result.arbCnt,
+        agents:     result.agents,
+        totalPrem:  result.totalPrem,
+        uninsured:  result.uninsured,
+        preInsured: result.preInsured
+      };
+      processedMonths.push(result.month);
+
+      // 最後一個月份設為當前顯示
+      if(i===nbActFileList.length-1) window.NB_DATA = annData[result.month];
+    }
+
+    saveNbAnnualData(annData);
+    nbSetProg(100);
+    const monthsStr = curYear+'年 '+processedMonths.sort((a,b)=>a-b).map(m=>m+'月').join('、');
+    nbShowMsg('success','✓ 完成！已解析：'+monthsStr);
+
+    // 若新保分頁開啟中，立即更新畫面
+    renderNbOverview();
+    renderNbTable();
+
+    setTimeout(()=>{
+      closeNbUpload();
+      document.getElementById('nb-btn-process').disabled=false;
+    }, 2000);
+
+  }catch(err){
+    console.error(err);
+    nbShowMsg('error','解析失敗：'+err.message);
+    document.getElementById('nb-btn-process').disabled=false;
+  }
+}
+
+// ── localStorage 存取 ──
+function getNbAnnualData(){
+  try{ return JSON.parse(localStorage.getItem(getNbAnnKey())||'{}'); }catch(e){ return {}; }
+}
+function saveNbAnnualData(data){
+  try{ localStorage.setItem(getNbAnnKey(), JSON.stringify(data)); }catch(e){}
+}
+
+// ── 輔助 UI ──
+function nbSetProg(v){ document.getElementById('nb-prog-fill').style.width=v+'%'; }
+function nbShowMsg(type,msg){
+  const el=document.getElementById('nb-upload-msg');
+  el.style.display='block';
+  el.style.color=type==='error'?'#dc2626':'#16a34a';
+  el.textContent=msg;
+}
+
+// ── 月份切換時同步新保資料 ──
+function nbSwitchMonth(m){
+  const annData = getNbAnnualData();
+  if(annData[m]){ window.NB_DATA = annData[m]; }
+  else { window.NB_DATA = null; }
+  const nbOvSec = document.getElementById('sec-nb-overview');
+  const nbTblSec = document.getElementById('sec-nb-table');
+  if(nbOvSec&&nbOvSec.style.display!=='none') renderNbOverview();
+  if(nbTblSec&&nbTblSec.style.display!=='none') renderNbTable();
+}
+
+// ── 渲染：投保總覽 ──
+function renderNbOverview(){
+  const hint = document.getElementById('nb-empty-hint');
+  const kpiGrid = document.querySelector('#sec-nb-overview .kpi-grid');
+  const deptBars = document.getElementById('nb-dept-bars');
+  const uninsuredSec = document.getElementById('nb-uninsured-sec');
+
+  // 嘗試從當前月份的年度資料載入
+  if(!window.NB_DATA){
+    const annData = getNbAnnualData();
+    // 取最後一個月份
+    const months = Object.keys(annData).map(Number).sort((a,b)=>b-a);
+    if(months.length) window.NB_DATA = annData[months[0]];
+  }
+
+  if(!window.NB_DATA){
+    if(hint) hint.style.display='block';
+    if(kpiGrid) kpiGrid.style.opacity='0.3';
+    return;
+  }
+  if(hint) hint.style.display='none';
+  if(kpiGrid) kpiGrid.style.opacity='1';
+
+  const d = window.NB_DATA;
+  const effPlate = (d.effPlateCnt != null) ? d.effPlateCnt : d.plateCnt; // 相容舊快照
+  const insRate = effPlate>0 ? d.insCnt/effPlate : 0;
+  const bodyRate = d.insCnt>0 ? d.bodyCnt/d.insCnt : 0;
+  const arbRate = d.insCnt>0 ? d.arbCnt/d.insCnt : 0;
+  const rentCnt = d.rentCnt||0;
+
+  document.getElementById('nb-month-label').textContent = curYear+' 年 '+d.month+' 月';
+  document.getElementById('nb-datasrc').textContent = '領牌'+d.plateCnt+'台（租賃'+rentCnt+'台）/ 新保'+d.insCnt+'件';
+  const plateCntEl = document.getElementById('nb-plate-cnt');
+  plateCntEl.innerHTML = d.plateCnt + (rentCnt>0 ? '<sup style="font-size:12px;font-weight:400;color:#94a3b8;margin-left:4px;">租賃'+rentCnt+'台</sup>' : '');
+  document.getElementById('nb-ins-cnt').textContent = d.insCnt;
+  document.getElementById('nb-ins-rate').textContent = (insRate*100).toFixed(1)+'%';
+  document.getElementById('nb-ins-rate').style.color = insRate>=1?'var(--green)':insRate>=0.8?'var(--yellow)':'var(--orange)';
+  document.getElementById('nb-body-rate').textContent = (bodyRate*100).toFixed(1)+'%';
+  document.getElementById('nb-arb-rate').textContent = (arbRate*100).toFixed(1)+'%';
+  const totalPrem = d.totalPrem||0;
+  const avgPrem = d.insCnt>0 ? Math.round(totalPrem/d.insCnt) : 0;
+  const avgPremEl = document.getElementById('nb-avg-prem');
+  if(avgPremEl) avgPremEl.textContent = avgPrem>0 ? '$'+avgPrem.toLocaleString() : '—';
+
+  // 各所橫條
+  if(deptBars){
+    const THREE = ['中壢所','八德所','桃園所'];
+    let barsHtml = '<div class="sec-title">各所投保率</div>';
+    THREE.forEach(dept=>{
+      const dAgents = (d.agents||[]).filter(a=>a.dept===dept);
+      const dIns = dAgents.reduce((s,a)=>s+a.insCnt,0);
+      const dBody = dAgents.reduce((s,a)=>s+a.bodyCnt,0);
+      const dArb = dAgents.reduce((s,a)=>s+a.arbCnt,0);
+      // 領牌台數：從 uninsured 反推不準，用 insCnt 代替（分母待後續精化）
+      const dBodyR = dIns>0?dBody/dIns:0;
+      const dArbR = dIns>0?dArb/dIns:0;
+      barsHtml += `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:70px;font-size:12px;font-weight:600;color:#475569;flex-shrink:0;">${dept}</div>
+        <div style="flex:1;">
+          <div style="display:flex;gap:4px;margin-bottom:4px;align-items:center;">
+            <span style="font-size:10px;color:#64748b;width:48px;flex-shrink:0;">車體險</span>
+            <div style="flex:1;background:#e2e8f0;border-radius:4px;height:14px;overflow:hidden;">
+              <div style="width:${(dBodyR*100).toFixed(1)}%;background:#4472C4;height:100%;border-radius:4px;transition:width .4s;"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:#4472C4;width:36px;text-align:right;">${(dBodyR*100).toFixed(0)}%</span>
+            <span style="font-size:10px;color:#94a3b8;">(${dBody}/${dIns})</span>
+          </div>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <span style="font-size:10px;color:#64748b;width:48px;flex-shrink:0;">任意險</span>
+            <div style="flex:1;background:#e2e8f0;border-radius:4px;height:14px;overflow:hidden;">
+              <div style="width:${(dArbR*100).toFixed(1)}%;background:#ca8a04;height:100%;border-radius:4px;transition:width .4s;"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:#ca8a04;width:36px;text-align:right;">${(dArbR*100).toFixed(0)}%</span>
+            <span style="font-size:10px;color:#94a3b8;">(${dArb}/${dIns})</span>
+          </div>
+        </div>
+      </div>`;
+    });
+    deptBars.innerHTML = barsHtml;
+  }
+
+  // 尚未投保清單
+  if(d.uninsured&&d.uninsured.length>0){
+    uninsuredSec.style.display='block';
+    const tbody=document.getElementById('nb-uninsured-tbody');
+    tbody.innerHTML=d.uninsured.map((r,i)=>`
+      <tr style="background:${i%2?'#fff':'#fef9f0'};">
+        <td style="padding:6px 10px;font-size:12px;font-weight:600;text-align:center;">${r.agent}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:center;">${r.plate}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:center;">${r.owner||'—'}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:center;color:#64748b;">${r.engine||'—'}</td>
+      </tr>`).join('');
+  } else {
+    uninsuredSec.style.display='none';
+  }
+
+  // 已投保但尚未領牌清單
+  const preInsuredSec = document.getElementById('nb-preinsured-sec');
+  if(d.preInsured&&d.preInsured.length>0){
+    preInsuredSec.style.display='block';
+    const ptbody = document.getElementById('nb-preinsured-tbody');
+    ptbody.innerHTML=d.preInsured.map((r,i)=>`
+      <tr style="background:${i%2?'#fff':'#f0f7ff'};">
+        <td style="padding:6px 10px;font-size:12px;font-weight:600;text-align:center;">${r.agent}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:center;">${r.plate}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:center;">${r.insured||'—'}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:center;color:#64748b;">${r.engine||'—'}</td>
+      </tr>`).join('');
+  } else {
+    if(preInsuredSec) preInsuredSec.style.display='none';
+  }
+}
+
+// ── 渲染：業代明細表 ──
+function renderNbTable(){
+  const emptyEl = document.getElementById('nb-table-empty');
+
+  if(!window.NB_DATA){
+    const annData = getNbAnnualData();
+    const months = Object.keys(annData).map(Number).sort((a,b)=>b-a);
+    if(months.length) window.NB_DATA = annData[months[0]];
+  }
+
+  if(!window.NB_DATA||!window.NB_DATA.agents){
+    if(emptyEl) emptyEl.style.display='block';
+    document.getElementById('nb-tbl-head').innerHTML='';
+    document.getElementById('nb-tbl-body').innerHTML='';
+    return;
+  }
+  if(emptyEl) emptyEl.style.display='none';
+
+  const d = window.NB_DATA;
+  const agents = d.agents||[];
+
+  // 建立 thead
+  document.getElementById('nb-tbl-head').innerHTML=`
+    <tr style="background:#4a5568;color:#fff;font-size:12px;position:sticky;top:0;z-index:2;">
+      <th style="padding:8px 8px;text-align:center;min-width:52px;">部門</th>
+      <th style="padding:8px 8px;text-align:center;min-width:70px;">課別</th>
+      <th style="padding:8px 8px;text-align:center;min-width:56px;">姓名</th>
+      <th style="padding:8px 8px;text-align:center;min-width:52px;">新保件數</th>
+      <th style="padding:8px 8px;text-align:center;min-width:62px;background:#4a6fa5;color:#fff;">車體險件數</th>
+      <th style="padding:8px 8px;text-align:center;min-width:52px;background:#4a6fa5;color:#fff;">車體險率</th>
+      <th style="padding:8px 8px;text-align:center;min-width:62px;background:#7a6a1a;color:#fff;">任意險件數</th>
+      <th style="padding:8px 8px;text-align:center;min-width:52px;background:#7a6a1a;color:#fff;">任意險率</th>
+      <th style="padding:8px 8px;text-align:center;min-width:52px;background:#5a7a5a;color:#fff;">強制險件數</th>
+      <th style="padding:8px 8px;text-align:center;min-width:76px;background:#C6EFCE;color:#1a5c1a;">任意險保費</th>
+      <th style="padding:8px 8px;text-align:center;min-width:76px;background:#f0fdf4;color:#1a5c1a;">應收保費</th>
+    </tr>`;
+
+  // 依篩選狀態決定顯示哪些部門
+  const showDepts = (nbCurDept==='all')
+    ? ['中壢所','八德所','桃園所']
+    : [nbCurDept];
+  const NB_FINMGR_SHOW = new Set(['黃依潔']);
+  let rows='';
+  let grandIns=0,grandBody=0,grandArb=0,grandArbAmt=0,grandPremAmt=0,grandCompCnt=0;
+
+  // 輔助：渲染一個業代列
+  function nbAgentRow(a, deptLabel, bg){
+    const bodyR = a.insCnt>0?a.bodyCnt/a.insCnt:0;
+    const arbR  = a.insCnt>0?a.arbCnt/a.insCnt:0;
+    const P='padding:5px 8px;font-size:12px;text-align:center;';
+    return `<tr style="background:${bg};">
+      <td style="${P}color:#64748b;">${deptLabel}</td>
+      <td style="${P}color:#94a3b8;">${a.course||''}</td>
+      <td style="${P}font-weight:600;">${a.name}</td>
+      <td style="${P}">${a.insCnt||'—'}</td>
+      <td style="${P}background:#eef4ff;">${a.bodyCnt||'—'}</td>
+      <td style="${P}background:#eef4ff;">${a.insCnt>0?'<span class="chip chip-'+nbRateChip(bodyR)+'">'+(bodyR*100).toFixed(0)+'%</span>':'—'}</td>
+      <td style="${P}background:#fffbeb;">${a.arbCnt||'—'}</td>
+      <td style="${P}background:#fffbeb;">${a.insCnt>0?'<span class="chip chip-'+nbRateChip(arbR)+'">'+(arbR*100).toFixed(0)+'%</span>':'—'}</td>
+      <td style="${P}background:#f0faf0;">${(a.compCnt||0)||'—'}</td>
+      <td style="${P}background:#f0fdf4;">${a.arb>0?'$'+Math.round(a.arb).toLocaleString():'—'}</td>
+      <td style="${P}background:#f0fdf4;">${(a.prem||0)>0?'$'+Math.round(a.prem).toLocaleString():'—'}</td>
+    </tr>`;
+  }
+
+  // 三所（含課小計）
+  showDepts.forEach(dept=>{
+    const dAgents = agents.filter(a=>a.dept===dept);
+    if(!dAgents.length) return;
+
+    // 所長列
+    const principal = dAgents.find(a=>a.course==='所長');
+    if(principal) rows += nbAgentRow(principal, dept, '#fff');
+
+    // 依課分組
+    const orgCourses = ORG[dept]?.courses ? Object.keys(ORG[dept].courses) : [];
+    const extraCourses = dAgents.filter(a=>a.course&&a.course!=='所長').map(a=>a.course);
+    const courseNames = [...new Set([...orgCourses,...extraCourses])].filter(Boolean);
+
+    courseNames.forEach(course=>{
+      const cAgents = dAgents.filter(a=>a.course===course);
+      cAgents.forEach((a,ci)=>{ rows += nbAgentRow(a, '', ci%2?'#f8fafc':'#fff'); });
+      // 課小計
+      const cIns=cAgents.reduce((s,a)=>s+a.insCnt,0);
+      const cBody=cAgents.reduce((s,a)=>s+a.bodyCnt,0);
+      const cArb=cAgents.reduce((s,a)=>s+a.arbCnt,0);
+      const cArbAmt=cAgents.reduce((s,a)=>s+(a.arb||0),0);
+      const cBodyR=cIns>0?cBody/cIns:0, cArbR=cIns>0?cArb/cIns:0;
+      rows+=`<tr style="background:#DAE8FC;font-size:12px;font-weight:600;color:#12239E;">
+        <td colspan="3" style="padding:5px 10px;text-align:center;">${course} 小計</td>
+        <td style="padding:5px 8px;text-align:center;">${cIns||'—'}</td>
+        <td style="padding:5px 8px;text-align:center;">${cBody||'—'}</td>
+        <td style="padding:5px 8px;text-align:center;">${cIns>0?(cBodyR*100).toFixed(0)+'%':'—'}</td>
+        <td style="padding:5px 8px;text-align:center;">${cArb||'—'}</td>
+        <td style="padding:5px 8px;text-align:center;">${cIns>0?(cArbR*100).toFixed(0)+'%':'—'}</td>
+        <td style="padding:5px 8px;text-align:center;">${cAgents.reduce((s,a)=>s+(a.compCnt||0),0)||'—'}</td>
+        <td style="padding:5px 8px;text-align:center;">$${Math.round(cArbAmt).toLocaleString()}</td>
+        <td style="padding:5px 8px;text-align:center;">$${Math.round(cAgents.reduce((s,a)=>s+(a.prem||0),0)).toLocaleString()}</td>
+      </tr>`;
+    });
+
+    // 所合計
+    const dIns=dAgents.reduce((s,a)=>s+a.insCnt,0);
+    const dBody=dAgents.reduce((s,a)=>s+a.bodyCnt,0);
+    const dArb=dAgents.reduce((s,a)=>s+a.arbCnt,0);
+    const dArbAmt=dAgents.reduce((s,a)=>s+(a.arb||0),0);
+    const dBodyR=dIns>0?dBody/dIns:0, dArbR=dIns>0?dArb/dIns:0;
+    rows+=`<tr style="background:#70A0D4;color:#fff;font-weight:700;font-size:12px;">
+      <td colspan="3" style="padding:6px 10px;text-align:center;">${dept} 合計</td>
+      <td style="padding:6px 8px;text-align:center;">${dIns}</td>
+      <td style="padding:6px 8px;text-align:center;">${dBody}</td>
+      <td style="padding:6px 8px;text-align:center;">${(dBodyR*100).toFixed(0)}%</td>
+      <td style="padding:6px 8px;text-align:center;">${dArb}</td>
+      <td style="padding:6px 8px;text-align:center;">${(dArbR*100).toFixed(0)}%</td>
+      <td style="padding:6px 8px;text-align:center;">${dAgents.reduce((s,a)=>s+(a.compCnt||0),0)}</td>
+      <td style="padding:6px 8px;text-align:center;">$${Math.round(dArbAmt).toLocaleString()}</td>
+      <td style="padding:6px 8px;text-align:center;">$${Math.round(dAgents.reduce((s,a)=>s+(a.prem||0),0)).toLocaleString()}</td>
+    </tr>`;
+    grandIns+=dIns; grandBody+=dBody; grandArb+=dArb; grandArbAmt+=dArbAmt;
+    grandPremAmt+=dAgents.reduce((s,a)=>s+(a.prem||0),0);
+    grandCompCnt+=dAgents.reduce((s,a)=>s+(a.compCnt||0),0);
+  });
+
+  // 財管部：只顯示黃依潔（全部篩選時才顯示）
+  if(nbCurDept==='all'){
+    const finAgents = agents.filter(a=>a.dept==='財管部'&&NB_FINMGR_SHOW.has(a.name));
+    finAgents.forEach((a,idx)=>{ rows += nbAgentRow(a, idx===0?'財管部':'', idx%2?'#f8fafc':'#fff'); });
+    const fIns=finAgents.reduce((s,a)=>s+a.insCnt,0);
+    const fBody=finAgents.reduce((s,a)=>s+a.bodyCnt,0);
+    const fArb=finAgents.reduce((s,a)=>s+a.arbCnt,0);
+    const fArbAmt=finAgents.reduce((s,a)=>s+(a.arb||0),0);
+    const fPremAmt=finAgents.reduce((s,a)=>s+(a.prem||0),0);
+    const fCompCnt=finAgents.reduce((s,a)=>s+(a.compCnt||0),0);
+    grandIns+=fIns; grandBody+=fBody; grandArb+=fArb; grandArbAmt+=fArbAmt; grandPremAmt+=fPremAmt; grandCompCnt+=fCompCnt;
+  }
+
+  // 總計列
+  const gBodyR=grandIns>0?grandBody/grandIns:0, gArbR=grandIns>0?grandArb/grandIns:0;
+  const gLabel = nbCurDept==='all' ? '全部 總計' : nbCurDept+' 總計';
+  rows+=`<tr style="background:#1e293b;color:#fff;font-weight:700;font-size:13px;">
+    <td colspan="3" style="padding:8px 10px;text-align:center;">${gLabel}</td>
+    <td style="padding:8px 8px;text-align:center;">${grandIns}</td>
+    <td style="padding:8px 8px;text-align:center;">${grandBody}</td>
+    <td style="padding:8px 8px;text-align:center;">${(gBodyR*100).toFixed(0)}%</td>
+    <td style="padding:8px 8px;text-align:center;">${grandArb}</td>
+    <td style="padding:8px 8px;text-align:center;">${(gArbR*100).toFixed(0)}%</td>
+    <td style="padding:8px 8px;text-align:center;">${grandCompCnt}</td>
+    <td style="padding:8px 8px;text-align:center;">$${Math.round(grandArbAmt).toLocaleString()}</td>
+    <td style="padding:8px 8px;text-align:center;">$${Math.round(grandPremAmt).toLocaleString()}</td>
+  </tr>`;
+
+  document.getElementById('nb-tbl-body').innerHTML=rows;
+}
+
+// 投保率顏色輔助
+function nbRateChip(r){
+  if(r>=0.9) return 'g';
+  if(r>=0.7) return 'y';
+  if(r>=0.5) return 'o';
+  return 'r';
+}
+
+// ── 篩選按鈕狀態 ──
+let nbCurDept = 'all';
+function nbFilterDept(dept){
+  nbCurDept = dept;
+  document.querySelectorAll('[data-nbf]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.nbf===dept);
+  });
+  renderNbTable();
+}
+
+// ── SharePoint 自動載入新保資料 ──
+// actFileObjects：spLoadFiles 下載完的業績 File 物件清單，直接傳給新保使用，不重複下載
+async function spLoadNbFiles(actFileObjects){
+  if(!msalApp||!msalAccount) return;
+  try{
+    const token = await spGetToken();
+    const year = String(curYear);
+
+    // 業績檔直接沿用 spLoadFiles 已下載的，無需重複下載
+    // 若未傳入（例如舊版呼叫），則使用全域 fileActList 作為 fallback
+    const actFiles = actFileObjects && actFileObjects.length ? actFileObjects : fileActList;
+    if(!actFiles||!actFiles.length){
+      console.log('[NB] 無業績檔可用，略過'); return;
+    }
+
+    // 只下載領牌明細
+    spSetStatus('讀取領牌明細資料夾…','#ca8a04');
+    let plateFileMetas=[];
+    try{ plateFileMetas=await spListFolder(token, SP_CONFIG.platePath+'/'+year); }
+    catch(e){
+      const all=await spListFolder(token, SP_CONFIG.platePath);
+      plateFileMetas=all.filter(f=>f.name.includes(year));
+    }
+    plateFileMetas=plateFileMetas.filter(f=>/領牌明細資料\d{6}\.xlsx/i.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name));
+
+    if(!plateFileMetas.length){
+      console.log('[NB] 找不到領牌明細，略過'); return;
+    }
+
+    const toFile=dl=>new File([dl.buffer],dl.name,{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+
+    // 下載領牌檔
+    const plateBufs=[];
+    for(let i=0;i<plateFileMetas.length;i++){
+      spSetStatus('下載領牌明細 '+(i+1)+'/'+plateFileMetas.length+'：'+plateFileMetas[i].name,'#ca8a04');
+      let dl;
+      try{ dl=await spDownloadFile(token,SP_CONFIG.platePath+'/'+year,plateFileMetas[i].name); }
+      catch(e){ dl=await spDownloadFile(token,SP_CONFIG.platePath,plateFileMetas[i].name); }
+      plateBufs.push(dl);
+    }
+
+    // 業績檔直接沿用，領牌檔為新下載
+    nbActFileList = actFiles;
+    nbPlateFileList = plateBufs.map(toFile);
+    await processNbFiles();
+
+  }catch(e){ console.warn('[NB SP載入]',e); }
+}
+
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.0/lib/msal-browser.min.js"></script>
 <script>
 const SP_CONFIG={
@@ -2901,9 +3745,10 @@ const SP_CONFIG={
   spHost:'fetcb107004.sharepoint.com',
   site:'/sites/op0',
   actPath:'General/保險/每月投保明細',
-  tgtPath:'General/保險/續保目標'
+  tgtPath:'General/保險/續保目標',
+  platePath:'General/保險/領牌明細'  // 業績明細與續保共用 actPath，新保系統自行篩選
 };
-const msalConfig={auth:{clientId:SP_CONFIG.clientId,authority:'https://login.microsoftonline.com/'+SP_CONFIG.tenantId,redirectUri:window.location.origin+'/'},cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}};
+const msalConfig={auth:{clientId:SP_CONFIG.clientId,authority:'https://login.microsoftonline.com/'+SP_CONFIG.tenantId,redirectUri:'https://nice-mushroom-0ca7dcd10.7.azurestaticapps.net/dashboard.html'},cache:{cacheLocation:'localStorage',storeAuthStateInCookie:false}};
 const msalScopes=['https://graph.microsoft.com/Files.Read','https://graph.microsoft.com/Sites.Read.All'];
 let msalApp,msalAccount,_spSiteId,_spDriveId;
 function spSetStatus(msg,color){const el=document.getElementById('sp-status');el.style.display=msg?'block':'none';el.style.color=color||'#64748b';el.textContent=msg;}
@@ -3014,6 +3859,8 @@ async function spLoadFiles(){
     spSetStatus('✓ 已載入 '+actFiles.length+' 個月份（'+months+'）','#16a34a');
     document.getElementById('cloud-status').innerHTML='✓ SharePoint 同步完成 '+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
     document.getElementById('cloud-status').style.color='#C6EFCE';
+    // 同步載入新保資料（傳入已下載的業績檔，不重複下載）
+    if(typeof spLoadNbFiles==='function') spLoadNbFiles(fileActList).catch(e=>console.warn('[NB]',e));
   }catch(e){console.error(e);spSetStatus('載入失敗：'+e.message,'#dc2626');}
   btn.style.pointerEvents='';btn.innerHTML='<span class="si-icon">☁️</span> 從 SharePoint 載入';
 }
