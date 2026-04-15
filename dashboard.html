@@ -3709,10 +3709,11 @@ async function spLoadNbFiles(actFileObjects){
       const all=await spListFolder(token, SP_CONFIG.platePath);
       plateFileMetas=all.filter(f=>f.name.includes(year));
     }
-    plateFileMetas=plateFileMetas.filter(f=>/領牌明細資料\d{6}\.xlsx/i.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name));
+    plateFileMetas=plateFileMetas.filter(f=>/(?:領牌明細|領牌明細資料).*\.xlsx$/i.test(f.name)&&/\d{6}/.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name));
 
     if(!plateFileMetas.length){
-      console.log('[NB] 找不到領牌明細，略過'); return;
+      spSetStatus('找不到領牌明細資料（路徑：'+SP_CONFIG.platePath+'），請確認資料夾與檔名','#dc2626');
+      console.warn('[NB] 找不到領牌明細'); return;
     }
 
     const toFile=dl=>new File([dl.buffer],dl.name,{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -3732,7 +3733,7 @@ async function spLoadNbFiles(actFileObjects){
     nbPlateFileList = plateBufs.map(toFile);
     await processNbFiles();
 
-  }catch(e){ console.warn('[NB SP載入]',e); }
+  }catch(e){ spSetStatus('[NB] 新保資料載入失敗：'+e.message,'#dc2626'); console.warn('[NB SP載入]',e); }
 }
 
 </script>
