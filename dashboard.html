@@ -67,14 +67,14 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .badge-g{background:var(--chip-g);color:var(--chip-g-t);}
 .badge-y{background:var(--chip-y);color:var(--chip-y-t);}
 .badge-r{background:var(--chip-r);color:var(--chip-r-t);}
-.progress-card{background:var(--card-bg);border-radius:10px;padding:16px 20px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;width:100%;box-sizing:border-box;overflow:hidden;}
-.prog-item{min-width:0;overflow:hidden;}
-.prog-item label{font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;margin-bottom:5px;}
-.prog-item label span{font-weight:600;color:var(--text);}
-.prog-track{height:12px;background:#e9ecef;border-radius:6px;overflow:hidden;position:relative;margin-top:20px;}
+.progress-card{background:var(--card-bg);border-radius:10px;padding:16px 24px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px;display:flex;flex-direction:column;gap:20px;box-sizing:border-box;overflow:hidden;}
+.prog-item{min-width:0;overflow:hidden;flex:1;}
+.prog-item label{font-size:12px;color:var(--text-muted);display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+.prog-item label span{font-weight:700;color:var(--text);font-size:12px;white-space:nowrap;}
+.prog-track{height:14px;background:#e9ecef;border-radius:7px;overflow:hidden;position:relative;}
 .prog-fill{height:100%;border-radius:6px;transition:width .8s ease;}
-.prog-marker{position:absolute;top:0;width:2px;height:100%;background:var(--orange);border-radius:1px;}
-.prog-marker::after{content:attr(data-label);position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--orange);white-space:nowrap;font-weight:600;pointer-events:none;}
+.prog-marker{position:absolute;top:0;width:2px;height:100%;background:var(--orange);border-radius:1px;z-index:1;}
+.prog-marker::after{content:attr(data-label);position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--orange);white-space:nowrap;font-weight:600;pointer-events:none;background:rgba(255,255,255,.85);padding:0 2px;border-radius:2px;}
 .sec-title{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px;padding-left:10px;border-left:3px solid var(--blue-1);}
 .chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:16px;width:100%;box-sizing:border-box;min-width:0;}
 .chart-card{background:var(--card-bg);border-radius:10px;padding:16px 18px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);}
@@ -519,7 +519,8 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
   </div>
 
-  <div class="progress-card" id="sec-progress" style="margin:0 32px 20px;box-sizing:border-box;">
+  <div style="padding:0 32px 0;box-sizing:border-box;">
+  <div class="progress-card" id="sec-progress" style="margin-bottom:20px;">
     <div class="prog-item">
       <label>MG 續保進度 <span id="prog-mg-label">0 / 0　0%</span></label>
       <div class="prog-track">
@@ -535,10 +536,11 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
       </div>
     </div>
   </div>
+  </div>
 
   <div id="sec-dept-progress" style="padding:0 32px 8px;box-sizing:border-box;width:100%;">
     <div class="sec-title">各營業所 達成率</div>
-    <div class="progress-card">
+    <div class="progress-card" style="flex-direction:row;gap:24px;align-items:flex-start;">
       <div class="prog-item">
         <label style="margin-bottom:8px;border-bottom:1px solid #f1f5f9;padding-bottom:6px;">各營業所 MG 達成率 <span id="dept-mg-label">(目標 60%)</span></label>
         <div id="dept-mg-bars" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;"></div>
@@ -3687,53 +3689,98 @@ function nbFilterDept(dept){
   renderNbTable();
 }
 
-// ── SharePoint 自動載入新保資料 ──
-// actFileObjects：spLoadFiles 下載完的業績 File 物件清單，直接傳給新保使用，不重複下載
+// ── SharePoint 自動載入新保資料（跨年份全量載入）──
+// 自動掃描領牌明細所有年份子資料夾，與業績明細逐年配對解析
 async function spLoadNbFiles(actFileObjects){
   if(!msalApp||!msalAccount) return;
   try{
     const token = await spGetToken();
-    const year = String(curYear);
-
-    // 業績檔直接沿用 spLoadFiles 已下載的，無需重複下載
-    // 若未傳入（例如舊版呼叫），則使用全域 fileActList 作為 fallback
-    const actFiles = actFileObjects && actFileObjects.length ? actFileObjects : fileActList;
-    if(!actFiles||!actFiles.length){
-      console.log('[NB] 無業績檔可用，略過'); return;
-    }
-
-    // 只下載領牌明細
-    spSetStatus('讀取領牌明細資料夾…','#ca8a04');
-    let plateFileMetas=[];
-    try{ plateFileMetas=await spListFolder(token, SP_CONFIG.platePath+'/'+year); }
-    catch(e){
-      const all=await spListFolder(token, SP_CONFIG.platePath);
-      plateFileMetas=all.filter(f=>f.name.includes(year));
-    }
-    plateFileMetas=plateFileMetas.filter(f=>/(?:領牌明細|領牌明細資料).*\.xlsx$/i.test(f.name)&&/\d{6}/.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name));
-
-    if(!plateFileMetas.length){
-      spSetStatus('找不到領牌明細資料（路徑：'+SP_CONFIG.platePath+'），請確認資料夾與檔名','#dc2626');
-      console.warn('[NB] 找不到領牌明細'); return;
-    }
-
     const toFile=dl=>new File([dl.buffer],dl.name,{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
 
-    // 下載領牌檔
-    const plateBufs=[];
-    for(let i=0;i<plateFileMetas.length;i++){
-      spSetStatus('下載領牌明細 '+(i+1)+'/'+plateFileMetas.length+'：'+plateFileMetas[i].name,'#ca8a04');
-      let dl;
-      try{ dl=await spDownloadFile(token,SP_CONFIG.platePath+'/'+year,plateFileMetas[i].name); }
-      catch(e){ dl=await spDownloadFile(token,SP_CONFIG.platePath,plateFileMetas[i].name); }
-      plateBufs.push(dl);
+    // ── Step 1：取得所有年份的業績明細（actPath 下各年份子資料夾）──
+    // 同時納入傳入的 curYear 業績檔（spLoadFiles 已下載）+ 其他年份自行抓
+    const YEARS = ['2025','2026']; // 支援的年份清單
+    const allActByYear = {}; // { '2025': [File,...], '2026': [File,...] }
+
+    // curYear 業績檔直接沿用，不重複下載
+    const curYearStr = String(curYear);
+    const curActFiles = actFileObjects && actFileObjects.length ? actFileObjects : fileActList;
+    if(curActFiles && curActFiles.length) allActByYear[curYearStr] = curActFiles;
+
+    // 其他年份：從 SP actPath 各年份子資料夾抓
+    for(const yr of YEARS){
+      if(yr === curYearStr) continue; // curYear 已有，略過
+      spSetStatus('讀取 '+yr+' 年業績明細…','#ca8a04');
+      try{
+        let yFiles=[];
+        try{ yFiles=await spListFolder(token, SP_CONFIG.actPath+'/'+yr); }
+        catch(e){
+          const all=await spListFolder(token, SP_CONFIG.actPath);
+          yFiles=all.filter(f=>f.name.includes(yr));
+        }
+        yFiles=yFiles.filter(f=>/\d{6}\.xlsx$/i.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name));
+        if(!yFiles.length){ console.log('[NB] '+yr+' 無業績明細，略過'); continue; }
+        const bufs=[];
+        for(let i=0;i<yFiles.length;i++){
+          spSetStatus('下載 '+yr+' 業績 '+(i+1)+'/'+yFiles.length+'：'+yFiles[i].name,'#ca8a04');
+          let dl;
+          try{ dl=await spDownloadFile(token,SP_CONFIG.actPath+'/'+yr,yFiles[i].name); }
+          catch(e){ dl=await spDownloadFile(token,SP_CONFIG.actPath,yFiles[i].name); }
+          bufs.push(toFile(dl));
+        }
+        if(bufs.length) allActByYear[yr]=bufs;
+      }catch(e){ console.warn('[NB] '+yr+' 業績明細載入失敗:',e); }
     }
 
-    // 業績檔直接沿用，領牌檔為新下載
-    nbActFileList = actFiles;
-    nbPlateFileList = plateBufs.map(toFile);
-    await processNbFiles();
+    if(!Object.keys(allActByYear).length){
+      console.log('[NB] 無任何業績檔可用，略過'); return;
+    }
 
+    // ── Step 2：取得所有年份的領牌明細（platePath 下各年份子資料夾）──
+    const allPlateByYear = {}; // { '2025': [File,...], '2026': [File,...] }
+    for(const yr of YEARS){
+      spSetStatus('讀取 '+yr+' 年領牌明細…','#ca8a04');
+      try{
+        let pFiles=[];
+        try{ pFiles=await spListFolder(token, SP_CONFIG.platePath+'/'+yr); }
+        catch(e){
+          const all=await spListFolder(token, SP_CONFIG.platePath);
+          pFiles=all.filter(f=>f.name.includes(yr));
+        }
+        pFiles=pFiles.filter(f=>/(?:領牌明細|領牌明細資料).*\.xlsx$/i.test(f.name)&&/\d{6}/.test(f.name)).sort((a,b)=>a.name.localeCompare(b.name));
+        if(!pFiles.length){ console.log('[NB] '+yr+' 無領牌明細，略過'); continue; }
+        const bufs=[];
+        for(let i=0;i<pFiles.length;i++){
+          spSetStatus('下載 '+yr+' 領牌 '+(i+1)+'/'+pFiles.length+'：'+pFiles[i].name,'#ca8a04');
+          let dl;
+          try{ dl=await spDownloadFile(token,SP_CONFIG.platePath+'/'+yr,pFiles[i].name); }
+          catch(e){ dl=await spDownloadFile(token,SP_CONFIG.platePath,pFiles[i].name); }
+          bufs.push(toFile(dl));
+        }
+        if(bufs.length) allPlateByYear[yr]=bufs;
+      }catch(e){ console.warn('[NB] '+yr+' 領牌明細載入失敗:',e); }
+    }
+
+    if(!Object.keys(allPlateByYear).length){
+      spSetStatus('[NB] 所有年份均找不到領牌明細，請確認 '+SP_CONFIG.platePath+' 路徑','#dc2626');
+      return;
+    }
+
+    // ── Step 3：逐年份配對業績 + 領牌，呼叫 processNbFiles ──
+    for(const yr of YEARS){
+      const actF = allActByYear[yr];
+      const platF = allPlateByYear[yr];
+      if(!actF || !platF){
+        console.log('[NB] '+yr+' 業績或領牌缺一，略過該年');
+        continue;
+      }
+      spSetStatus('解析 '+yr+' 年新保資料…','#ca8a04');
+      nbActFileList = actF;
+      nbPlateFileList = platF;
+      await processNbFiles();
+    }
+
+    spSetStatus('✓ 新保資料全年份載入完成','#16a34a');
   }catch(e){ spSetStatus('[NB] 新保資料載入失敗：'+e.message,'#dc2626'); console.warn('[NB SP載入]',e); }
 }
 
