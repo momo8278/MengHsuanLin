@@ -1884,6 +1884,8 @@ function switchYear(y){
   if(y===curYear) return;
   curYear=y;
   curMonth=null;
+  window.NB_SELECTED_MONTH = null;  // 重置新保月份選擇
+  window.NB_DATA = null;
   // 更新目標值
   MG_T  = getTargets().mg;
   TOT_T = getTargets().tot;  // 重設月份選擇，允許雲端資料更新
@@ -3489,9 +3491,10 @@ function nbShowMsg(type,msg){
 
 // ── 月份切換時同步新保資料 ──
 function nbSwitchMonth(m){
+  window.NB_SELECTED_MONTH = m;  // 記錄使用者主動選擇的月份
   const annData = getNbAnnualData();
   const d = annData[m];
-  // 無效月份（新保0件但有領牌）不顯示
+  // 無效月份（新保0件但有領牌）或無資料月份，均設為 null 顯示空狀態
   if(d && !(d.insCnt===0 && (d.plateCnt||0)>0)){ window.NB_DATA = d; }
   else { window.NB_DATA = null; }
   const nbOvSec = document.getElementById('sec-nb-overview');
@@ -3509,10 +3512,9 @@ function renderNbOverview(){
   const deptBars = document.getElementById('nb-dept-bars');
   const uninsuredSec = document.getElementById('nb-uninsured-sec');
 
-  // 嘗試從當前月份的年度資料載入
-  if(!window.NB_DATA){
+  // 只有在沒有主動切換月份時，才自動選最近有效月份
+  if(!window.NB_DATA && !window.NB_SELECTED_MONTH){
     const annData = getNbAnnualData();
-    // 取最後一個有效月份（排除新保0件但有領牌的無效月）
     const months = Object.keys(annData).map(Number).sort((a,b)=>b-a)
       .filter(m=>!(annData[m].insCnt===0 && (annData[m].plateCnt||0)>0));
     if(months.length) window.NB_DATA = annData[months[0]];
@@ -3638,7 +3640,7 @@ function renderNbOverview(){
 function renderNbTable(){
   const emptyEl = document.getElementById('nb-table-empty');
 
-  if(!window.NB_DATA){
+  if(!window.NB_DATA && !window.NB_SELECTED_MONTH){
     const annData = getNbAnnualData();
     const months = Object.keys(annData).map(Number).sort((a,b)=>b-a)
       .filter(m=>!(annData[m].insCnt===0 && (annData[m].plateCnt||0)>0));
