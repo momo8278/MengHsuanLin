@@ -3417,6 +3417,12 @@ async function processNbFiles(){
         annData = getNbAnnualData();                   // 讀新年份的現有快照
       }
 
+      // 若該月業績明細無任何新保件（insCnt=0），領牌資料也可能尚未對應，跳過不存入
+      if(result.insCnt === 0 && result.plateCnt > 0){
+        console.log(`[NB] ${fileYear}年${result.month}月 新保0件/領牌${result.plateCnt}台，資料尚未完整，略過`);
+        continue;
+      }
+
       // 存入當前年份快照
       annData[result.month] = {
         month:        result.month,
@@ -3484,7 +3490,9 @@ function nbShowMsg(type,msg){
 // ── 月份切換時同步新保資料 ──
 function nbSwitchMonth(m){
   const annData = getNbAnnualData();
-  if(annData[m]){ window.NB_DATA = annData[m]; }
+  const d = annData[m];
+  // 無效月份（新保0件但有領牌）不顯示
+  if(d && !(d.insCnt===0 && (d.plateCnt||0)>0)){ window.NB_DATA = d; }
   else { window.NB_DATA = null; }
   const nbOvSec = document.getElementById('sec-nb-overview');
   const nbTblSec = document.getElementById('sec-nb-table');
@@ -3504,8 +3512,9 @@ function renderNbOverview(){
   // 嘗試從當前月份的年度資料載入
   if(!window.NB_DATA){
     const annData = getNbAnnualData();
-    // 取最後一個月份
-    const months = Object.keys(annData).map(Number).sort((a,b)=>b-a);
+    // 取最後一個有效月份（排除新保0件但有領牌的無效月）
+    const months = Object.keys(annData).map(Number).sort((a,b)=>b-a)
+      .filter(m=>!(annData[m].insCnt===0 && (annData[m].plateCnt||0)>0));
     if(months.length) window.NB_DATA = annData[months[0]];
   }
 
@@ -3631,7 +3640,8 @@ function renderNbTable(){
 
   if(!window.NB_DATA){
     const annData = getNbAnnualData();
-    const months = Object.keys(annData).map(Number).sort((a,b)=>b-a);
+    const months = Object.keys(annData).map(Number).sort((a,b)=>b-a)
+      .filter(m=>!(annData[m].insCnt===0 && (annData[m].plateCnt||0)>0));
     if(months.length) window.NB_DATA = annData[months[0]];
   }
 
@@ -3847,7 +3857,9 @@ function nbRateChip(r){
 // ── 新保年度總覽 ──
 function renderNbAnnual(){
   const data = getNbAnnualData();
-  const months = Object.keys(data).map(Number).sort((a,b)=>a-b);
+  // 過濾無效月份：新保0件但有領牌（資料尚未完整的月份）
+  const months = Object.keys(data).map(Number).sort((a,b)=>a-b)
+    .filter(m=>!(data[m].insCnt===0 && (data[m].plateCnt||0)>0));
 
   // 標頭更新
   const yearLbl = document.getElementById('nb-ann-year-label');
