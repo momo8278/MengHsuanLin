@@ -67,13 +67,14 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .badge-g{background:var(--chip-g);color:var(--chip-g-t);}
 .badge-y{background:var(--chip-y);color:var(--chip-y-t);}
 .badge-r{background:var(--chip-r);color:var(--chip-r-t);}
-.progress-card{background:var(--card-bg);border-radius:10px;padding:16px 20px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;width:100%;box-sizing:border-box;}
+.progress-card{background:var(--card-bg);border-radius:10px;padding:16px 20px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;width:100%;box-sizing:border-box;overflow:hidden;}
+.prog-item{min-width:0;overflow:hidden;}
 .prog-item label{font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;margin-bottom:5px;}
 .prog-item label span{font-weight:600;color:var(--text);}
-.prog-track{height:12px;background:#e9ecef;border-radius:6px;overflow:visible;position:relative;}
+.prog-track{height:12px;background:#e9ecef;border-radius:6px;overflow:hidden;position:relative;margin-top:20px;}
 .prog-fill{height:100%;border-radius:6px;transition:width .8s ease;}
-.prog-marker{position:absolute;top:-3px;width:2px;height:18px;background:var(--orange);border-radius:1px;}
-.prog-marker::after{content:attr(data-label);position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--orange);white-space:nowrap;font-weight:600;}
+.prog-marker{position:absolute;top:0;width:2px;height:100%;background:var(--orange);border-radius:1px;}
+.prog-marker::after{content:attr(data-label);position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--orange);white-space:nowrap;font-weight:600;pointer-events:none;}
 .sec-title{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px;padding-left:10px;border-left:3px solid var(--blue-1);}
 .chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:16px;width:100%;box-sizing:border-box;min-width:0;}
 .chart-card{background:var(--card-bg);border-radius:10px;padding:16px 18px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);}
@@ -465,9 +466,9 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
 </div>
 
 <div class="container">
-  <div id="banner-container" style="padding:20px 24px 0;"></div>
+  <div id="banner-container" style="padding:24px 32px 0;"></div>
 
-  <div class="kpi-grid" id="sec-kpi" style="padding:20px 24px 0;box-sizing:border-box;width:100%;">
+  <div class="kpi-grid" id="sec-kpi" style="padding:24px 32px 0;box-sizing:border-box;width:100%;">
     <div class="kpi-card" style="--accent:#4472C4">
       <div class="kpi-label" id="kpi-month-label">3月 目標總件數</div>
       <div class="kpi-val" id="kpi-tt-tot">0</div>
@@ -490,7 +491,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
   </div>
 
-  <div class="kpi-grid-2" id="sec-kpi2" style="padding:0 24px 16px;box-sizing:border-box;width:100%;">
+  <div class="kpi-grid-2" id="sec-kpi2" style="padding:0 32px 20px;box-sizing:border-box;width:100%;">
     <div class="kpi-card" style="--accent:#185FA5">
       <div class="kpi-label">首次續保達成率</div>
       <div class="kpi-val" id="kpi-first-r" style="color:#185FA5">0%</div>
@@ -518,7 +519,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
   </div>
 
-  <div class="progress-card" id="sec-progress" style="margin:0 24px 16px;box-sizing:border-box;">
+  <div class="progress-card" id="sec-progress" style="margin:0 32px 20px;box-sizing:border-box;">
     <div class="prog-item">
       <label>MG 續保進度 <span id="prog-mg-label">0 / 0　0%</span></label>
       <div class="prog-track">
@@ -535,7 +536,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
   </div>
 
-  <div id="sec-dept-progress" style="padding:0 24px;box-sizing:border-box;width:100%;">
+  <div id="sec-dept-progress" style="padding:0 32px 8px;box-sizing:border-box;width:100%;">
     <div class="sec-title">各營業所 達成率</div>
     <div class="progress-card">
       <div class="prog-item">
@@ -549,7 +550,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
   </div>
 
-  <div id="sec-charts" style="display:none;">
+  <div id="sec-charts" style="display:none;padding:24px 32px;">
     <div style="padding:16px 24px 10px;border-bottom:1px solid var(--border);background:var(--card-bg);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button class="filter-btn active" data-f="all" onclick="filterDept('all')">全部</button>
       <button class="filter-btn" data-f="中壢所" onclick="filterDept('中壢所')">中壢所</button>
@@ -570,8 +571,8 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
   </div>
 
-  <div id="sec-table" style="display:none;padding:20px 0;">
-    <div class="sec-title" style="margin-left:24px;">各部門業績明細 (全欄位完整版)</div>
+  <div id="sec-table" style="display:none;padding:24px 0;">
+    <div class="sec-title" style="margin-left:32px;">各部門業績明細 (全欄位完整版)</div>
     <div class="table-wrap" style="border-radius:0;border-left:none;border-right:none;">
       <div class="table-controls">
         <button class="filter-btn active" data-f="all" onclick="filterDept('all')">全部</button>
@@ -594,7 +595,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
 
 
   <!-- ════════ 業績分析分頁 ════════ -->
-  <div id="sec-analysis" style="display:none;padding:20px 24px;">
+  <div id="sec-analysis" style="display:none;padding:24px 32px;">
 
     <!-- 標題 -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
@@ -663,7 +664,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
 
   </div>
   <!-- ════════ 電訪漏斗分頁 ════════ -->
-  <div id="sec-funnel" style="display:none;padding:20px 24px;">
+  <div id="sec-funnel" style="display:none;padding:24px 32px;">
 
     <!-- 標題 -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
@@ -762,7 +763,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
 
   </div>
   <!-- ════════ 年度總覽分頁 ════════ -->
-  <div id="sec-annual" style="display:none;padding:20px 24px;">
+  <div id="sec-annual" style="display:none;padding:24px 32px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <div class="sec-title" style="margin:0;">📅 年度業績總覽 <span id="annual-year-label">2026</span></div>
       <div style="display:flex;gap:8px;align-items:center;">
@@ -830,7 +831,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
   </div>
   <!-- ════════ 新保業績：投保總覽 ════════ -->
-  <div id="sec-nb-overview" style="display:none;padding:20px 24px;">
+  <div id="sec-nb-overview" style="display:none;padding:24px 32px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
       <div class="sec-title" style="margin:0;">🆕 新保業績儀表板 <span id="nb-month-label" style="color:#4472C4;"></span></div>
       <div style="display:flex;gap:8px;align-items:center;">
@@ -916,8 +917,8 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
   </div>
 
   <!-- ════════ 新保業績：業代明細 ════════ -->
-  <div id="sec-nb-table" style="display:none;padding:20px 24px;">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;">
+  <div id="sec-nb-table" style="display:none;padding:24px 32px;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px;">
       <div class="sec-title" style="margin:0;">業代新保業績明細</div>
       <div style="margin-left:8px;display:flex;gap:6px;flex-wrap:wrap;" id="nb-dept-filters">
         <button class="filter-btn active" data-nbf="all"   onclick="nbFilterDept('all')">全部</button>
@@ -939,7 +940,7 @@ td.merge-course{background:#f8fafc !important;color:var(--text-muted);font-size:
     </div>
   </div>
 
-  <div class="footer" style="padding:16px 24px;">銘勁汽車 MG 營業部　保險業績儀表板　2026.03　數據即時同步至雲端</div>
+  <div class="footer" style="padding:18px 32px;">銘勁汽車 MG 營業部　保險業績儀表板　2026.03　數據即時同步至雲端</div>
 </div>
 </div><!-- /main-wrap -->
 
